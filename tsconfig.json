@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "jsx": "react",
+    "baseUrl": "src/main/typescript/frontend",
+    "paths": {
+      "@axwt/*":  ["./*"]
+    },
+    "sourceMap": true,
+    "target": "es2021",
+    "moduleResolution": "node",
+    "module": "esNext",
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}

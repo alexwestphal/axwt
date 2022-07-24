@@ -1,5 +1,6 @@
 
 import * as React from 'react'
+import {Redirect} from 'react-router-dom'
 
 import {AppBar, Box, Hidden, IconButton, Toolbar, Tooltip, Typography} from '@mui/material'
 
@@ -31,13 +32,15 @@ export interface ControlBarProps {
 
 export const ControlBarContext = React.createContext<[ControlBarProps, (props: ControlBarProps) => void]>([{}, () => {}])
 
-const Classes = createClasses("ControlBar", ["drawerButton", "drawerButton_closed", "drawerButton_open", "title"])
+export const controlBarClasses = createClasses("ControlBar", ["drawerButton", "drawerButton_closed", "drawerButton_open", "title", "titleOuter"])
 
 /**
  * Component to actually mount the control bar
  */
 export const ControlBarBase: React.FC = () => {
-    const [props, ] = React.useContext(ControlBarContext)
+    const [props] = React.useContext(ControlBarContext)
+
+    const [redirect, setRedirect] = React.useState<string>(null)
 
     const display = Core.useTypedSelector(Core.selectDisplay)
 
@@ -46,6 +49,7 @@ export const ControlBarBase: React.FC = () => {
     const handleToggleLeftDrawerOpen = () => dispatch(Core.DisplayActions.toggleDrawer('Left'))
     const handleToggleRightDrawerOpen = () => dispatch(Core.DisplayActions.toggleDrawer('Right'))
 
+    const classes = controlBarClasses
 
     let leftTooltipText = "", rightTooltipText = ""
     if(props.leftDrawerControl?.tooltip) {
@@ -62,7 +66,7 @@ export const ControlBarBase: React.FC = () => {
     }
 
     let leftDrawerControl = props.leftDrawerControl && <IconButton
-        className={cls(Classes.drawerButton, { [Classes.drawerButton_open]: display.leftDrawer == 'Open' })}
+        className={cls(classes.drawerButton, { [classes.drawerButton_open]: display.leftDrawer == 'Open' })}
         size="large"
         aria-label={leftTooltipText}
         disabled={display.leftDrawer == 'Locked'}
@@ -74,7 +78,7 @@ export const ControlBarBase: React.FC = () => {
     }
 
     let rightDrawerControl = props.rightDrawerControl && <IconButton
-        className={cls(Classes.drawerButton, { [Classes.drawerButton_open]: display.rightDrawer == 'Open' })}
+        className={cls(classes.drawerButton, { [classes.drawerButton_open]: display.rightDrawer == 'Open' })}
         size="large"
         aria-label={rightTooltipText}
         disabled={display.rightDrawer == 'Locked'}
@@ -86,36 +90,39 @@ export const ControlBarBase: React.FC = () => {
     }
 
     return <AppBar
-        className={Classes.root}
+        className={classes.root}
         position="fixed"
         sx={ (theme) => ({
             zIndex: theme.zIndex.drawer + 1,
             backgroundColor: theme.banner.backgroundColor,
             color: theme.banner.textColor,
 
-            [`& .${Classes.drawerButton}`]: {
+            [`& .${classes.drawerButton}`]: {
                 color: 'inherit',
             },
-            [`& .${Classes.drawerButton_open}`]: {
+            [`& .${classes.drawerButton_open}`]: {
                 backgroundColor: "rgba(0, 0, 0, 0.05)"
             },
-            [`& .${Classes.title}`]: {
-                flexGrow: 1,
+            [`& .${classes.title}`]: {
                 fontSize: '1.125rem',
                 paddingX: 2,
                 paddingY: 1,
             },
+            [`& .${classes.titleOuter}`]: {
+                flexGrow: 1,
+            },
         })}>
         <Toolbar variant="dense" disableGutters>
             {leftDrawerControl }
-            <Typography className={Classes.title} variant="h6" component="h1" noWrap>
-                AXWT { display.title && <Hidden mdDown>| {display.title}</Hidden>}
-            </Typography>
-
+            <div className={classes.titleOuter} >
+                <Typography className={classes.title} variant="h6" component="h1" noWrap onClick={() => setRedirect("/")}>
+                    AXWT { display.title && <Hidden mdDown>| {display.title}</Hidden>}
+                </Typography>
+            </div>
             <Box display="flex">{props.navControls}</Box>
             { rightDrawerControl || <Box mr={1}/>}
-
         </Toolbar>
+        {redirect && <Redirect push to={redirect}/>}
     </AppBar>
 }
 

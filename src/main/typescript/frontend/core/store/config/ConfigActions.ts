@@ -42,7 +42,7 @@ export namespace ConfigActions {
             let storedValue = sessionStorage.getItem(appFlag)
             if(storedValue != null) {
                 result[appFlag] = storedValue == 'true'
-                console.log(`[OPCE] Using appFlag value set from console ${appFlag}=${storedValue}`)
+                console.log(`[AXWT] Using appFlag value set from console ${appFlag}=${storedValue}`)
             }
         }
 

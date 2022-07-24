@@ -59,7 +59,7 @@ export namespace DisplayActions {
 
     export const setTitle = (title: string): Core.ThunkAction =>
         (dispatch, getState) => {
-            document.title = `AXWT | ${title}`
+            document.title = title ? `AXWT | ${title}` : 'AXWT'
 
             dispatch(createAction('display/setTitle', title))
         }

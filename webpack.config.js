@@ -29,7 +29,7 @@ module.exports = (env, argv) => {
         },
         plugins: [
             new HtmlWebpackPlugin({
-                title: 'Alex’s eXperimental Web Tools',
+                title: 'AXWT',
                 minify: false
             }),
             new WebpackManifestPlugin({

@@ -10,6 +10,9 @@ import {createClasses} from '@axwt/util'
 import {selectCurrentElement, useThunkDispatch, useTypedSelector} from '../store'
 
 
+import HtmlIdField from './HtmlIdField'
+
+
 export const elementPanelClasses = createClasses("ElementPanel", [])
 
 export const ElementPanel: React.FC = () => {
@@ -26,7 +29,9 @@ export const ElementPanel: React.FC = () => {
 
         }}
     >
-        Element
+        <HtmlIdField element={element}/>
+
+
     </Box>
 }
 

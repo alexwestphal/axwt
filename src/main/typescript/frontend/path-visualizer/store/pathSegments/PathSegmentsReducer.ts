@@ -48,9 +48,8 @@ export const PathSegmentsReducer: Reducer<PathSegmentsState> = produce((draft: D
             draft.byId[action.meta.segmentId] = PathSegment.convert(existing, action.payload)
             break
         }
-        case 'pv/pathSegments/setHighlightedSegment':
-            draft.highlightedSegmentId = action.payload
-            draft.highlightedPoint = action.meta.pointType
+        case 'pv/pathSegments/selectHighlight':
+            draft.highlight = action.payload
             break
 
     }

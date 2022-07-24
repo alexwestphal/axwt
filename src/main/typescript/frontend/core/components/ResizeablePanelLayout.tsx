@@ -8,6 +8,8 @@ import DragHandleIcon from '@mui/icons-material/DragHandle'
 
 import {cls, createClasses, useWindowSize} from '@axwt/util'
 
+import * as Core from '../store'
+
 import DragHandleVerticalIcon from '../icons/DragHandleVertical'
 
 
@@ -59,8 +61,6 @@ const classes = createClasses("RPL", [
 ])
 
 export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
-
-    //const display = Core.useTypedSelector(Core.selectDisplay)
 
     const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null)
     const handleMenuClick: React.MouseEventHandler<HTMLButtonElement> = (event) => {

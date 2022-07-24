@@ -40,7 +40,7 @@ export const LibraryPanel: React.FC = () => {
     const handleClickIcon = (name) => {
         let path = ref.current.querySelector(`.Library-${name} .MuiSvgIcon-root path`)
         let importAction = dispatch(ElementsActions.importPath(path.getAttribute("d")))
-        dispatch(ElementsActions.setCurrentElement({ elementType: 'path', elementId: importAction.meta.newElementId }))
+        dispatch(ElementsActions.selectCurrentElement({ elementType: 'path', elementId: importAction.meta.newElementId }))
     }
 
     const classes = libraryPanelClasses

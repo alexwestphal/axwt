@@ -4,18 +4,17 @@
 
 import {IdMap} from '@axwt/core'
 
-import {PathSegment, PathSegmentId, PointType} from '../../data'
+import {PathSegment, PathSegmentHighlight, PathSegmentId} from '../../data'
 
 
 export interface PathSegmentsState {
     byId: IdMap<PathSegmentId, PathSegment>
-    highlightedSegmentId?: PathSegmentId
-    highlightedPoint?: PointType
+    highlight: PathSegmentHighlight | null
 }
 
 export namespace PathSegmentsState {
     export const Default: PathSegmentsState = {
         byId: {},
-
+        highlight: null
     }
 }

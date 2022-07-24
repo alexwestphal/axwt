@@ -3,7 +3,7 @@
  */
 
 import {UUID} from '@axwt/core'
-import {PathSegmentParser, PathSegmentParserOptions} from './PathSegmentParser'
+import {PathDefinitionParser, PathDefinitionParserOptions} from './PathDefinitionParser'
 
 export type PathSegmentId = UUID
 
@@ -95,8 +95,8 @@ export type EllipticalArcAbsolute = PathSegmentBase<'A', {
     rx: number
     ry: number
     angle: number
-    largeArcFlag: 0 | 1
-    sweepFlag: 0 | 1
+    largeArc: 0 | 1
+    sweep: 0 | 1
     x: number
     y: number
 }>
@@ -105,8 +105,8 @@ export type EllipticalArcRelative = PathSegmentBase<'a', {
     rx: number
     ry: number
     angle: number
-    largeArcFlag: 0 | 1
-    sweepFlag: 0 | 1
+    largeArc: 0 | 1
+    sweep: 0 | 1
     dx: number
     dy: number
 }>
@@ -133,7 +133,7 @@ export namespace PathSegment {
             return { segmentId: UUID.create(), command: command, arguments: args, implicit: argsIndex > 0 }
         })
 
-    export const parse = (source: string, options: PathSegmentParserOptions = {}): PathSegment[] => new PathSegmentParser(source, options).parse()
+    export const parse = (source: string, options: PathDefinitionParserOptions = {}): PathSegment[] => new PathDefinitionParser(source, options).parse()
 
     export const toString = (segments: PathSegment | PathSegment[]): string =>
         Array.isArray(segments) ? segments.flatMap(buildSegment).join(' ') : buildSegment(segments).join(' ')
@@ -142,12 +142,12 @@ export namespace PathSegment {
         let result: any[] = [segment.command]
         switch (segment.command) {
             case 'A':
-                for(let { rx, ry, angle, largeArcFlag, sweepFlag, x,y } of [segment.arguments])
-                    result.push(`${rx} ${ry} ${angle} ${largeArcFlag} ${sweepFlag} ${x},${y}`)
+                for(let { rx, ry, angle, largeArc, sweep, x,y } of [segment.arguments])
+                    result.push(`${rx} ${ry} ${angle} ${largeArc} ${sweep} ${x},${y}`)
                 break
             case 'a':
-                for(let { rx, ry, angle, largeArcFlag, sweepFlag, dx,dy } of [segment.arguments])
-                    result.push(`${rx} ${ry} ${angle} ${largeArcFlag} ${sweepFlag} ${dx},${dy}`)
+                for(let { rx, ry, angle, largeArc, sweep, dx,dy } of [segment.arguments])
+                    result.push(`${rx} ${ry} ${angle} ${largeArc} ${sweep} ${dx},${dy}`)
                 break
             case 'C':
                 for(let { x1,y1, x2,y2, x,y } of [segment.arguments])
@@ -378,8 +378,8 @@ export namespace PathSegment {
     }
 
     export const argumentNamesByType = {
-        A: ['rx', 'ry', 'angle', 'largeArcFlag', 'x', 'y'],
-        a: ['rx', 'ry', 'angle', 'largeArcFlag', 'dx', 'dy'],
+        A: ['rx', 'ry', 'angle', 'largeArc', 'sweep', 'x', 'y'],
+        a: ['rx', 'ry', 'angle', 'largeArc', 'sweep', 'dx', 'dy'],
         C: ['x1', 'y1', 'x2', 'y2', 'x', 'y'],
         c: ['dx1', 'dy1', 'dx2', 'dy2', 'dx', 'dy'],
         H: ['x'],

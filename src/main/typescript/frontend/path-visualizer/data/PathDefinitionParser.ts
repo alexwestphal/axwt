@@ -22,10 +22,10 @@ import PathSegment, {
 } from './PathSegment'
 import {ArrayUtils} from '@axwt/util'
 
-export class PathSegmentParser {
+export class PathDefinitionParser {
 
     source: string
-    options: PathSegmentParserOptions
+    options: PathDefinitionParserOptions
 
     private currentIndex: number = 0
     private tokenStartIndex: number = 0
@@ -33,7 +33,7 @@ export class PathSegmentParser {
     private tokens: Token[] = []
     private tokenIndex: number = 0
 
-    constructor(source: string, options: PathSegmentParserOptions = {}) {
+    constructor(source: string, options: PathDefinitionParserOptions = {}) {
         this.source = source
         this.options = options
     }
@@ -144,7 +144,7 @@ export class PathSegmentParser {
                         else throw new PathSegmentParserError(sweepFlagToken.index, `Invalid sweep '${sweepFlagToken.value}' export 0 or 1`)
                     }
 
-                    return { rx, ry, angle, largeArcFlag, sweepFlag, x, y }
+                    return { rx, ry, angle, largeArc: largeArcFlag, sweep: sweepFlag, x, y }
                 }
 
                 let args = this.consumeArguments(commandToken, 7)
@@ -166,7 +166,7 @@ export class PathSegmentParser {
                         else throw new PathSegmentParserError(sweepFlagToken.index, `Invalid sweep '${sweepFlagToken.value}' export 0 or 1`)
                     }
 
-                    return { rx, ry, angle, largeArcFlag, sweepFlag, dx, dy }
+                    return { rx, ry, angle, largeArc: largeArcFlag, sweep: sweepFlag, dx, dy }
                 }
 
                 let args = this.consumeArguments(commandToken, 7)
@@ -276,7 +276,7 @@ export class PathSegmentParser {
     }
 }
 
-export interface PathSegmentParserOptions {
+export interface PathDefinitionParserOptions {
     coerceFlags?: boolean
     ignoreExtraCharacters?: boolean
     ignoreExtraArguments?: boolean

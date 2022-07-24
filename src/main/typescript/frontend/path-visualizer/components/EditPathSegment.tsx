@@ -4,13 +4,27 @@
 
 import * as React from 'react'
 
-import {Box, IconButton, inputClasses, MenuItem, TextField, Tooltip} from '@mui/material'
+import {
+    Box, Divider,
+    inputClasses, inputLabelClasses,
+    ListItemIcon,
+    ListItemText,
+    Menu,
+    MenuItem,
+    TextField,
+    Tooltip, Typography
+} from '@mui/material'
 import {blueGrey} from '@mui/material/colors'
-import ClearIcon from '@mui/icons-material/Clear'
+import AddIcon from '@mui/icons-material/Add'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import ContentCutIcon from '@mui/icons-material/ContentCut'
+import ContentPasteIcon from '@mui/icons-material/ContentPaste'
+import DeleteIcon from '@mui/icons-material/Delete'
+import SplitIcon from '@mui/icons-material/CallSplitOutlined'
 
 import {cls, createClasses} from '@axwt/util'
 
-import {ElementId, PathSegment, PathSegmentId, PathSegmentSymbol, PointType} from '../data'
+import {ElementId, PathSegment, PathSegmentHighlight, PathSegmentId, PathSegmentSymbol, PointType} from '../data'
 import {
     PathSegmentsActions,
     selectHighlightedSegment,
@@ -27,18 +41,59 @@ export interface EditPathSegmentProps {
     first?: boolean
 }
 
-export const editPathSegmentClasses = createClasses("EditPathSegment", ["commandSelect", "highlighted", "implicitSpacer", "inputs", "numberInput", "point"])
+export const editPathSegmentClasses = createClasses("EditPathSegment", ["commandSelect", "flag", "flagInput", "highlighted", "implicitSpacer", "inputs", "numberInput", "point"])
 
 export const EditPathSegment: React.FC<EditPathSegmentProps> = ({pathId, segmentId, first}) => {
 
+    const [contextMenu, setContextMenu] = React.useState<{mouseX: number, mouseY: number} | null>(null)
+
     const segment = useTypedSelector(state => selectSegment(state, segmentId))
-    const [highlightedSegmentId, highlightedPointType] = useTypedSelector(selectHighlightedSegment)
-    const isHighlighted = highlightedSegmentId == segmentId
+    const highlight = useTypedSelector(selectHighlightedSegment)
 
     const dispatch = useThunkDispatch()
 
+    const handleChangeArg = (name: string, value: number) => {
+        dispatch(PathSegmentsActions.setArgValue(segmentId, name, value))
+    }
+
+    const handleChangeCommand: React.ChangeEventHandler<HTMLInputElement> = (ev) => {
+        dispatch(PathSegmentsActions.setCommand(segmentId, ev.target.value as PathSegmentSymbol))
+    }
+
+    const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (ev) => {
+        ev.preventDefault()
+        ev.stopPropagation()
+        handleFocus()
+        setContextMenu(
+            contextMenu === null
+                ? {
+                    mouseX: ev.clientX + 2,
+                    mouseY: ev.clientY - 6
+                }
+                : null
+        )
+    }
+
     const handleFocus = () => {
-        if(!isHighlighted) dispatch(PathSegmentsActions.setHighlightedSegment(segmentId))
+        if(highlight?.segmentId != segmentId || highlight?.pointType != null)
+            dispatch(PathSegmentsActions.selectHighlight({segmentId, pointType: null}))
+    }
+
+    const handleFocusPoint = (pointType: PointType) => {
+        if(highlight.segmentId != segmentId || highlight?.pointType != pointType)
+            dispatch(PathSegmentsActions.selectHighlight({segmentId, pointType}))
+    }
+
+    const handleFocusFlag = (flag: 'largeArc' | 'sweep') => {
+        if(flag == 'largeArc') {
+            if(highlight.segmentId != segmentId || highlight?.largeArc !== true) {
+                dispatch(PathSegmentsActions.selectHighlight({segmentId, pointType: null, largeArc: true}))
+            }
+        } else if (flag == 'sweep') {
+            if(highlight.segmentId != segmentId || highlight?.sweep !== true) {
+                dispatch(PathSegmentsActions.selectHighlight({segmentId, pointType: null, sweep: true}))
+            }
+        }
     }
 
     const handleDelete = () => {
@@ -46,32 +101,34 @@ export const EditPathSegment: React.FC<EditPathSegmentProps> = ({pathId, segment
         dispatch(PathSegmentsActions.deleteSegment(pathId, segmentId))
     }
 
-    const handleChangeCommand: React.ChangeEventHandler<HTMLInputElement> = (ev) => {
-        dispatch(PathSegmentsActions.setCommand(segmentId, ev.target.value as PathSegmentSymbol))
-    }
-
-    const handleChangeArg = (name: string, value: number) => {
-        dispatch(PathSegmentsActions.setArgValue(segmentId, name, value))
-    }
 
     const classes = editPathSegmentClasses
 
     return <Box
-        className={cls(classes.root, { [classes.highlighted]: isHighlighted && !highlightedPointType })}
+        className={cls(classes.root, { [classes.highlighted]: highlight?.segmentId == segmentId && !highlight.pointType && !highlight.largeArc && !highlight.sweep })}
         onClick={handleFocus}
+        onContextMenu={handleContextMenu}
         sx={{
-            paddingTop: 1,
-            paddingX: 1,
             display: 'flex',
             borderBottom: 1,
             borderBottomColor: 'divider',
 
             [`&.${classes.highlighted}`]: {
-                backgroundColor: blueGrey[100]
+                backgroundColor: blueGrey[50]
+            },
+            [`& .${classes.flag}`]: {
+                [`&.${classes.highlighted}`]: {
+                    backgroundColor: blueGrey[50]
+                },
+            },
+
+            [`& .${classes.flagInput}`]: {
+                width: '4em',
+                textAlign: 'center',
             },
 
             [`& .${classes.commandSelect}`]: {
-                width: '4em',
+                width: '5em',
                 textAlign: 'center'
             },
             [`& .${classes.implicitSpacer}`]: {
@@ -84,17 +141,22 @@ export const EditPathSegment: React.FC<EditPathSegmentProps> = ({pathId, segment
             [`& .${classes.numberInput}`]: {
                 width: '4em',
                 textAlign: 'center',
-
-                [`& .${inputClasses.root}`]: {
-                    paddingLeft: 1
-                }
             },
             [`& .${classes.point}`]: {
                 display: 'flex',
 
                 [`&.${classes.highlighted}`]: {
-                    backgroundColor: blueGrey[100]
+                    backgroundColor: blueGrey[50]
                 },
+            },
+
+            [`& .${inputClasses.root}`]: {
+                paddingTop: 1/21,
+                paddingX: 1
+            },
+            [`& .${inputLabelClasses.root}`]: {
+                paddingTop: 1/2,
+                paddingX: 1
             },
         }}
     >
@@ -133,16 +195,87 @@ export const EditPathSegment: React.FC<EditPathSegmentProps> = ({pathId, segment
             <ArgumentFields
                 segment={segment}
                 onChangeArg={handleChangeArg}
-                onFocusPoint={(pointType) => dispatch(PathSegmentsActions.setHighlightedSegment(segmentId, pointType))}
-                highlightedPoint={isHighlighted ? highlightedPointType : undefined}
+                onFocusPoint={handleFocusPoint}
+                onFocusFlag={handleFocusFlag}
+                highlight={highlight?.segmentId == segment.segmentId ? highlight : undefined}
             />
         </div>
-        {!first && <Tooltip title="Delete Command">
-            <IconButton onClick={handleDelete}>
-                <ClearIcon/>
-            </IconButton>
-        </Tooltip>}
+        <Menu
 
+            open={contextMenu !== null}
+            onClose={() => setContextMenu(null)}
+            anchorReference="anchorPosition"
+            anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+        >
+
+            <MenuItem>
+                <ListItemIcon>
+                    <ContentCutIcon fontSize="small"/>
+                </ListItemIcon>
+                <ListItemText>
+                    Cut
+                </ListItemText>
+                <Typography variant="body2" color="text.secondary" pl={1}>
+                    ⌘X
+                </Typography>
+            </MenuItem>
+            <MenuItem>
+                <ListItemIcon>
+                    <ContentCopyIcon fontSize="small"/>
+                </ListItemIcon>
+                <ListItemText>
+                    Copy
+                </ListItemText>
+                <Typography variant="body2" color="text.secondary" pl={1}>
+                    ⌘C
+                </Typography>
+            </MenuItem>
+            <MenuItem>
+                <ListItemIcon>
+                    <ContentPasteIcon fontSize="small"/>
+                </ListItemIcon>
+                <ListItemText>
+                    Paste
+                </ListItemText>
+                <Typography variant="body2" color="text.secondary" pl={1}>
+                    ⌘V
+                </Typography>
+            </MenuItem>
+            <Divider/>
+            <MenuItem>
+                <ListItemIcon>
+                    <AddIcon fontSize="small"/>
+                </ListItemIcon>
+                <ListItemText>
+                    New Segment
+                </ListItemText>
+                <Typography variant="body2" color="text.secondary" pl={1}>
+                    ⌘N
+                </Typography>
+            </MenuItem>
+            <MenuItem>
+                <ListItemIcon>
+                    <SplitIcon fontSize="small"/>
+                </ListItemIcon>
+                <ListItemText>
+                    Split Segment
+                </ListItemText>
+            </MenuItem>
+            <MenuItem
+                onClick={handleDelete}
+                disabled={first}
+            >
+                <ListItemIcon>
+                    <DeleteIcon fontSize="small"/>
+                </ListItemIcon>
+                <ListItemText>
+                    Delete Segment
+                </ListItemText>
+                <Typography variant="body2" color="text.secondary" pl={2}>
+                    ⌘⌫
+                </Typography>
+            </MenuItem>
+        </Menu>
     </Box>
 }
 
@@ -175,12 +308,25 @@ const PathCommandTooltips = {
 interface ArgumentFieldsProps {
     segment: PathSegment
     onChangeArg: (name: string, value: number) => void
-    highlightedPoint?: PointType
+    highlight?: PathSegmentHighlight
     onFocusPoint: (pointType: PointType) => void
+    onFocusFlag: (flag: 'largeArc' | 'sweep') => void
 }
 
-const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, highlightedPoint, onFocusPoint}) => {
+const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, highlight, onFocusPoint, onFocusFlag}) => {
+
+    const handleFocusPoint = (pointType: PointType) => (event: React.FocusEvent) => {
+        event.stopPropagation()
+        onFocusPoint(pointType)
+    }
+
+    const handleFocusFlag = (flag: 'largeArc' | 'sweep') => (event: React.FocusEvent) => {
+        event.stopPropagation()
+        onFocusFlag(flag)
+    }
+
     const classes = editPathSegmentClasses
+
     switch (segment.command) {
         case 'A': {
             let args = segment.arguments
@@ -188,11 +334,21 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
                 <NumberArgumentField name="rx" value={args.rx} onChange={onChangeArg}/>
                 <NumberArgumentField name="ry" value={args.ry} onChange={onChangeArg}/>
                 <NumberArgumentField name="angle" value={args.angle} onChange={onChangeArg}/>
-                <NumberArgumentField name="largeArcFlag" value={args.largeArcFlag} onChange={onChangeArg}/>
-                <NumberArgumentField name="sweepFlag" value={args.sweepFlag} onChange={onChangeArg}/>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                    onFocus={() => onFocusPoint('End')}
+                    className={cls(classes.flag, { [classes.highlighted]: highlight?.largeArc})}
+                    onFocus={handleFocusFlag('largeArc')}
+                >
+                    <FlagArgumentField name="largeArc" value={args.largeArc} onChange={onChangeArg}/>
+                </div>
+                <div
+                    className={cls(classes.flag, { [classes.highlighted]: highlight?.sweep })}
+                    onFocus={handleFocusFlag('sweep')}
+                >
+                    <FlagArgumentField name="sweep" value={args.sweep} onChange={onChangeArg}/>
+                </div>
+                <div
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                    onFocus={handleFocusPoint('End')}
                 >
                     <NumberArgumentField name="x" value={args.x} onChange={onChangeArg}/>
                     <NumberArgumentField name="y" value={args.y} onChange={onChangeArg}/>
@@ -205,11 +361,21 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
                 <NumberArgumentField name="rx" value={args.rx} onChange={onChangeArg}/>
                 <NumberArgumentField name="ry" value={args.ry} onChange={onChangeArg}/>
                 <NumberArgumentField name="angle" value={args.angle} onChange={onChangeArg}/>
-                <NumberArgumentField name="largeArcFlag" value={args.largeArcFlag} onChange={onChangeArg}/>
-                <NumberArgumentField name="sweepFlag" value={args.sweepFlag} onChange={onChangeArg}/>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                    onFocus={() => onFocusPoint('End')}
+                    className={cls(classes.flag, { [classes.highlighted]: highlight?.largeArc})}
+                    onFocus={handleFocusFlag('largeArc')}
+                >
+                    <FlagArgumentField name="largeArc" value={args.largeArc} onChange={onChangeArg}/>
+                </div>
+                <div
+                    className={cls(classes.flag, { [classes.highlighted]: highlight?.sweep })}
+                    onFocus={handleFocusFlag('sweep')}
+                >
+                    <FlagArgumentField name="sweep" value={args.sweep} onChange={onChangeArg}/>
+                </div>
+                <div
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                    onFocus={handleFocusPoint('End')}
                 >
                     <NumberArgumentField name="dx" value={args.dx} onChange={onChangeArg}/>
                     <NumberArgumentField name="dy" value={args.dy} onChange={onChangeArg}/>
@@ -221,22 +387,22 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
             let args = segment.arguments
             return <>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'StartControl' })}
-                    onFocus={() => onFocusPoint('StartControl')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'StartControl' })}
+                    onFocus={handleFocusPoint('StartControl')}
                 >
                     <NumberArgumentField name="x1" value={args.x1} onChange={onChangeArg}/>
                     <NumberArgumentField name="y1" value={args.y1} onChange={onChangeArg}/>
                 </div>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'EndControl' })}
-                    onFocus={() => onFocusPoint('EndControl')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'EndControl' })}
+                    onFocus={handleFocusPoint('EndControl')}
                 >
                     <NumberArgumentField name="x2" value={args.x2} onChange={onChangeArg}/>
                     <NumberArgumentField name="y2" value={args.y2} onChange={onChangeArg}/>
                 </div>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                    onFocus={() => onFocusPoint('End')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                    onFocus={handleFocusPoint('End')}
                 >
                     <NumberArgumentField name="x" value={args.x} onChange={onChangeArg}/>
                     <NumberArgumentField name="y" value={args.y} onChange={onChangeArg}/>
@@ -247,22 +413,22 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
             let args = segment.arguments
             return <>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'StartControl' })}
-                    onFocus={() => onFocusPoint('StartControl')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'StartControl' })}
+                    onFocus={handleFocusPoint('StartControl')}
                 >
                     <NumberArgumentField name="dx1" value={args.dx1} onChange={onChangeArg}/>
                     <NumberArgumentField name="dy1" value={args.dy1} onChange={onChangeArg}/>
                 </div>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'EndControl' })}
-                    onFocus={() => onFocusPoint('EndControl')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'EndControl' })}
+                    onFocus={handleFocusPoint('EndControl')}
                 >
                     <NumberArgumentField name="dx2" value={args.dx2} onChange={onChangeArg}/>
                     <NumberArgumentField name="dy2" value={args.dy2} onChange={onChangeArg}/>
                 </div>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                    onFocus={() => onFocusPoint('End')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                    onFocus={handleFocusPoint('End')}
                 >
                     <NumberArgumentField name="dx" value={args.dx} onChange={onChangeArg}/>
                     <NumberArgumentField name="dy" value={args.dy} onChange={onChangeArg}/>
@@ -273,8 +439,8 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
         case 'H': {
             let args = segment.arguments
             return <div
-                className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                onFocus={() => onFocusPoint('End')}
+                className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                onFocus={handleFocusPoint('End')}
             >
                 <NumberArgumentField name="x" value={args.x} onChange={onChangeArg}/>
             </div>
@@ -282,8 +448,8 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
         case 'h': {
             let args = segment.arguments
             return <div
-                className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                onFocus={() => onFocusPoint('End')}
+                className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                onFocus={handleFocusPoint('End')}
             >
                 <NumberArgumentField name="dx" value={args.dx} onChange={onChangeArg}/>
             </div>
@@ -294,8 +460,8 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
         case 'T': {
             let args = segment.arguments
             return <div
-                className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                onFocus={() => onFocusPoint('End')}
+                className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                onFocus={handleFocusPoint('End')}
             >
                 <NumberArgumentField name="x" value={args.x} onChange={onChangeArg}/>
                 <NumberArgumentField name="y" value={args.y} onChange={onChangeArg}/>
@@ -306,8 +472,8 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
         case 't': {
             let args = segment.arguments
             return <div
-                className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                onFocus={() => onFocusPoint('End')}
+                className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                onFocus={handleFocusPoint('End')}
             >
                 <NumberArgumentField name="dx" value={args.dx} onChange={onChangeArg}/>
                 <NumberArgumentField name="dy" value={args.dy} onChange={onChangeArg}/>
@@ -318,15 +484,15 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
             let args = segment.arguments
             return <>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'StartControl' })}
-                    onFocus={() => onFocusPoint('StartControl')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'StartControl' })}
+                    onFocus={handleFocusPoint('StartControl')}
                 >
                     <NumberArgumentField name="x1" value={args.x1} onChange={onChangeArg}/>
                     <NumberArgumentField name="y1" value={args.y1} onChange={onChangeArg}/>
                 </div>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                    onFocus={() => onFocusPoint('End')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                    onFocus={handleFocusPoint('End')}
                 >
                     <NumberArgumentField name="x" value={args.x} onChange={onChangeArg}/>
                     <NumberArgumentField name="y" value={args.y} onChange={onChangeArg}/>
@@ -337,15 +503,15 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
             let args = segment.arguments
             return <>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'StartControl' })}
-                    onFocus={() => onFocusPoint('StartControl')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'StartControl' })}
+                    onFocus={handleFocusPoint('StartControl')}
                 >
                     <NumberArgumentField name="dx1" value={args.dx1} onChange={onChangeArg}/>
                     <NumberArgumentField name="dy1" value={args.dy1} onChange={onChangeArg}/>
                 </div>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                    onFocus={() => onFocusPoint('End')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                    onFocus={handleFocusPoint('End')}
                 >
                     <NumberArgumentField name="dx" value={args.dx} onChange={onChangeArg}/>
                     <NumberArgumentField name="dy" value={args.dy} onChange={onChangeArg}/>
@@ -357,15 +523,15 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
             let args = segment.arguments
             return <>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'EndControl' })}
-                    onFocus={() => onFocusPoint('EndControl')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'EndControl' })}
+                    onFocus={handleFocusPoint('EndControl')}
                 >
                     <NumberArgumentField name="x2" value={args.x2} onChange={onChangeArg}/>
                     <NumberArgumentField name="y2" value={args.y2} onChange={onChangeArg}/>
                 </div>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                    onFocus={() => onFocusPoint('End')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                    onFocus={handleFocusPoint('End')}
                 >
                     <NumberArgumentField name="x" value={args.x} onChange={onChangeArg}/>
                     <NumberArgumentField name="y" value={args.y} onChange={onChangeArg}/>
@@ -376,15 +542,15 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
             let args = segment.arguments
             return <>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'EndControl' })}
-                    onFocus={() => onFocusPoint('EndControl')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'EndControl' })}
+                    onFocus={handleFocusPoint('EndControl')}
                 >
                     <NumberArgumentField name="dx2" value={args.dx2} onChange={onChangeArg}/>
                     <NumberArgumentField name="dy2" value={args.dy2} onChange={onChangeArg}/>
                 </div>
                 <div
-                    className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                    onFocus={() => onFocusPoint('End')}
+                    className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                    onFocus={handleFocusPoint('End')}
                 >
                     <NumberArgumentField name="dx" value={args.dx} onChange={onChangeArg}/>
                     <NumberArgumentField name="dy" value={args.dy} onChange={onChangeArg}/>
@@ -396,8 +562,8 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
         case 'V': {
             let args = segment.arguments
             return <div
-                className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                onFocus={() => onFocusPoint('End')}
+                className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                onFocus={handleFocusPoint('End')}
             >
                 <NumberArgumentField name="y" value={args.y} onChange={onChangeArg}/>
             </div>
@@ -405,8 +571,8 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
         case 'v': {
             let args = segment.arguments
             return <div
-                className={cls(classes.point, { [classes.highlighted]: highlightedPoint == 'End' })}
-                onFocus={() => onFocusPoint('End')}
+                className={cls(classes.point, { [classes.highlighted]: highlight?.pointType == 'End' })}
+                onFocus={handleFocusPoint('End')}
             >
                 <NumberArgumentField name="dy" value={args.dy} onChange={onChangeArg}/>
             </div>
@@ -423,7 +589,7 @@ const ArgumentFields: React.FC<ArgumentFieldsProps> = ({segment, onChangeArg, hi
 interface NumberArgumentField {
     name: string
     value: number
-    onChange: (name, newValue: number) => void
+    onChange: (name: string, newValue: number) => void
     angle?: boolean
 }
 
@@ -453,8 +619,7 @@ const NumberArgumentField: React.FC<NumberArgumentField> = ({name, value, onChan
     }
 
     const handleBlur = () => {
-        let asNumber = parseFloat(currentValue)
-        if(isNaN(asNumber)) onChange(name, 0)
+        setCurrentValue(''+value)
     }
 
     return <TextField
@@ -464,5 +629,45 @@ const NumberArgumentField: React.FC<NumberArgumentField> = ({name, value, onChan
         value={currentValue}
         onBlur={handleBlur}
         onChange={handleChange}
+        onClick={(ev) => ev.stopPropagation()}
+    />
+}
+
+
+interface FlagArgumentField {
+    name: string
+    value: number
+    onChange: (name: string, newValue: number) => void
+}
+
+const FlagArgumentField: React.FC<FlagArgumentField> = ({name, value, onChange}) => {
+
+    const [blank, setBlank] = React.useState<boolean>(false)
+
+    const handleChange: React.ChangeEventHandler<HTMLInputElement> = (ev) => {
+        let str = ev.target.value
+        str = str.replaceAll(/[^01]/g, '')
+
+        if(str.length >= 1) {
+            setBlank(false)
+            let newValue = parseInt(str.charAt(0))
+            if(newValue != value) onChange(name, newValue)
+        } else {
+            setBlank(true)
+        }
+    }
+
+    const handleBlur = () => {
+        setBlank(false)
+    }
+
+    return <TextField
+        className={editPathSegmentClasses.flagInput}
+        size="small" variant="standard"
+        label={name}
+        value={blank ? "" : value}
+        onBlur={handleBlur}
+        onChange={handleChange}
+        onClick={(ev) => ev.stopPropagation()}
     />
 }

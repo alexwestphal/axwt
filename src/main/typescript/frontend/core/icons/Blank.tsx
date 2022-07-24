@@ -1,11 +1,11 @@
 
 import * as React from 'react'
 
-import SvgIcon, {SvgIconProps} from '@mui/material/SvgIcon'
+import {createSvgIcon} from '@mui/material'
 
-const BlankIcon: React.FC<SvgIconProps> = props =>
-    <SvgIcon {...props}>
-        <path d=""/>
-    </SvgIcon>
+const BlankIcon = createSvgIcon(
+    <path d=""/>,
+    "BlankIcon"
+)
 
 export default BlankIcon

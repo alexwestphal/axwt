@@ -6,7 +6,7 @@ import {createSelector, Selector} from 'reselect'
 
 import {IdMap} from '@axwt/core'
 
-import {Element, ElementId, PathSegment, PathSegmentId, PointType} from '../../data'
+import {Element, ElementId, PathSegment, PathSegmentHighlight, PathSegmentId, PointType} from '../../data'
 
 import * as PV from '../PV'
 import {selectElement} from '../elements'
@@ -24,10 +24,5 @@ export const selectSegmentsByPath: Selector<PV.RootState, PathSegment[], [Elemen
         (path as Element.Path).segmentIds.map(segmentId => pathSegmentsById[segmentId])
 )
 
-export const selectHighlightedSegment: Selector<PV.RootState, [PathSegmentId, PointType | null]> =
-    (state) => {
-        let { highlightedSegmentId, highlightedPoint } = state.pv.pathSegments
-        return highlightedSegmentId
-            ? [highlightedSegmentId, highlightedPoint]
-            : [null, null]
-    }
+export const selectHighlightedSegment: Selector<PV.RootState, PathSegmentHighlight | null> =
+    (state) => state.pv.pathSegments.highlight

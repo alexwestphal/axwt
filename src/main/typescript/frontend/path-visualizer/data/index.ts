@@ -4,6 +4,7 @@
 
 export * from './Element'
 export * from './PathSegment'
-export * from './PathSegmentParser'
+export * from './PathSegmentHighlight'
+export * from './PathDefinitionParser'
 export * from './PresentationAttributes'
 export * from './ViewConfig'

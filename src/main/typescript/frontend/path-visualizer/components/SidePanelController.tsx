@@ -6,6 +6,7 @@ import * as React from 'react'
 
 import {Box, IconButton, MenuItem, Select, SxProps, TextField} from '@mui/material'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import SettingsIcon from '@mui/icons-material/Settings'
 
 import {createClasses} from '@axwt/util'
@@ -47,7 +48,9 @@ export const SidePanelController: React.FC<SidePanelControllerProps> = ({classNa
 
                 [`& .${classes.panelContents}`]: {
                     overflowY: 'auto',
-                    flex: '1 0 0'
+                    flex: '1 0 0',
+                    display: 'flex',
+                    flexDirection: 'column',
                 },
                 [`& .${classes.titleBar}`]: theme => ({
                     borderBottom: 1,
@@ -97,7 +100,7 @@ export const SidePanelController: React.FC<SidePanelControllerProps> = ({classNa
                     <SettingsIcon/>
                 </IconButton>
                 <IconButton size="small">
-                    <ChevronLeftIcon/>
+                    { side == 'Left' ? <ChevronLeftIcon/> : <ChevronRightIcon/> }
                 </IconButton>
             </div>
         </div>

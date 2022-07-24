@@ -4,7 +4,7 @@
 
 import {Action, createAction, UUID} from '@axwt/core'
 
-import {PathSegment, PathSegmentId, PathSegmentSymbol, ElementId, PointType} from '../../data'
+import {PathSegment, PathSegmentId, PathSegmentSymbol, ElementId, PathSegmentHighlight} from '../../data'
 
 
 export namespace PathSegmentsActions {
@@ -17,9 +17,9 @@ export namespace PathSegmentsActions {
 
     export type SetCommand = Action<'pv/pathsSegments/setCommand', PathSegmentSymbol, { segmentId: PathSegmentId }>
 
-    export type SetHighlightedSegment = Action<'pv/pathSegments/setHighlightedSegment', PathSegmentId, { pointType: PointType }>
+    export type SelectHighlight = Action<'pv/pathSegments/selectHighlight', PathSegmentHighlight>
 
-    export type Any = DeleteSegment | NewSegment | SetArgValue | SetCommand | SetHighlightedSegment
+    export type Any = DeleteSegment | NewSegment | SetArgValue | SetCommand | SelectHighlight
 
 
     export const deleteSegment = (pathId: ElementId, segmentId: PathSegmentId): DeleteSegment =>
@@ -37,6 +37,6 @@ export namespace PathSegmentsActions {
     export const setCommand = (segmentId: PathSegmentId, symbol: PathSegmentSymbol): SetCommand =>
         createAction('pv/pathsSegments/setCommand', symbol, { segmentId })
 
-    export const setHighlightedSegment = (segmentId: PathSegmentId, pointType?: PointType): SetHighlightedSegment =>
-        createAction('pv/pathSegments/setHighlightedSegment', segmentId, { pointType })
+    export const selectHighlight = (highlight: PathSegmentHighlight): SelectHighlight =>
+        createAction('pv/pathSegments/selectHighlight', highlight)
 }

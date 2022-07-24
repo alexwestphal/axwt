@@ -25,8 +25,11 @@ export const ElementsReducer: Reducer<ElementsState> = produce((draft: Draft<Ele
         case 'pv/elements/newElement':
             draft.byId[action.meta.newElementId] = action.payload
             break
-        case 'pv/elements/setCurrentElement':
+        case 'pv/elements/selectCurrentElement':
             draft.currentElement = action.payload
+            break
+        case 'pv/elements/setHtmlId':
+            draft.byId[action.meta.elementId].htmlId = action.payload
             break
         case 'pv/elements/setShowElement':
             draft.byId[action.meta.elementId].showElement = action.payload

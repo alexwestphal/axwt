@@ -19,7 +19,7 @@ import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 
 import {cls, createClasses} from '@axwt/util'
 
-import {Element, PathSegment} from '../data'
+import {Element, PathSegment, PathSegmentHighlight, PathSegmentId, PointType} from '../data'
 import {
     PathSegmentsActions,
     selectCurrentElement,
@@ -29,7 +29,7 @@ import {
     useTypedSelector
 } from '../store'
 
-import {PanelSizingProps} from '../../core/components/ResizeablePanelLayout'
+import {PanelSizingProps} from '@axwt/core/components/ResizeablePanelLayout'
 import SVGGrid from './SVGGrid'
 
 
@@ -120,14 +120,18 @@ interface DrawPathProps {
     mode: 'Raw' | 'Detail' | 'Both'
 }
 
-const drawPathClasses = createClasses("DrawPath", ["controlPoint", "controlPointHighlighted", "cpLink", "line", "raw", "segments", "segment", "segment_highlight"])
+const drawPathClasses = createClasses("DrawPath", ["controlPoint", "controlPointHighlighted", "cpLink", "flagAlt", "line", "raw", "segments", "segment", "segment_highlight"])
 
 const DrawPath: React.FC<DrawPathProps> = ({path, mode, scale}) => {
 
     const segments = useTypedSelector(state => selectSegmentsByPath(state, path.elementId))
-    const [highlightedSegmentId, highlightedPoint] = useTypedSelector(selectHighlightedSegment)
+    const highlight = useTypedSelector(selectHighlightedSegment)
 
     const dispatch = useThunkDispatch()
+
+    const handleHighlight = (highlight: PathSegmentHighlight) => {
+        dispatch(PathSegmentsActions.selectHighlight(highlight))
+    }
 
     const classes = drawPathClasses
 
@@ -143,11 +147,17 @@ const DrawPath: React.FC<DrawPathProps> = ({path, mode, scale}) => {
                     strokeWidth: 0.1,
                     strokeDasharray: 1
                 },
+                [`& .${classes.flagAlt}`]: {
+                    fill: 'none',
+                    stroke: blueGrey[200],
+                    strokeWidth: 0.1,
+                    strokeDasharray: 1
+                },
 
                 [`& .${classes.line}`]: {
                     fill: 'none',
                     stroke: blueGrey[300],
-                    strokeWidth: 0.2,
+                    strokeWidth: 0.25,
                 },
 
                 [`& .${classes.controlPoint}`]: {
@@ -180,7 +190,7 @@ const DrawPath: React.FC<DrawPathProps> = ({path, mode, scale}) => {
             {PathSegment
                 .withDerivedValues(segments)
                 .map((segment, segmentIndex) => {
-                    let highlighted = segment.segmentId == highlightedSegmentId
+                    let highlighted = segment.segmentId == highlight?.segmentId
 
                     let { x0,y0, x,y, x1,y1, x2,y2, startPointReflects } = segment.derived
 
@@ -188,12 +198,26 @@ const DrawPath: React.FC<DrawPathProps> = ({path, mode, scale}) => {
                     switch(segment.command) {
                         case 'A':
                         case 'a': {
-                            let {rx, ry, angle, largeArcFlag, sweepFlag} = segment.arguments
+                            let {rx, ry, angle, largeArc, sweep} = segment.arguments
                             contents.push(
                                 <path
                                     key="Line"
                                     className={classes.line}
-                                    d={`A ${rx * scale} ${ry * scale} ${angle} ${largeArcFlag} ${sweepFlag} ${x * scale} ${y * scale}`}
+                                    d={`M ${x0 * scale} ${y0 * scale} A ${rx * scale} ${ry * scale} ${angle} ${largeArc} ${sweep} ${x * scale} ${y * scale}`}
+                                />
+                            )
+                            if(highlight?.largeArc) contents.push(
+                                <path
+                                    key="largeArcAlt"
+                                    className={classes.flagAlt}
+                                    d={`M ${x0 * scale} ${y0 * scale} A ${rx * scale} ${ry * scale} ${angle} ${largeArc ? 0 : 1} ${sweep} ${x * scale} ${y * scale}`}
+                                />
+                            )
+                            if(highlight?.sweep) contents.push(
+                                <path
+                                    key="sweepAlt"
+                                    className={classes.flagAlt}
+                                    d={`M ${x0 * scale} ${y0 * scale} A ${rx * scale} ${ry * scale} ${angle} ${largeArc} ${sweep ? 0 : 1} ${x * scale} ${y * scale}`}
                                 />
                             )
                             break
@@ -258,27 +282,27 @@ const DrawPath: React.FC<DrawPathProps> = ({path, mode, scale}) => {
 
                     }
 
-                    let reflectedPointHighlighted = !highlighted && startPointReflects && startPointReflects.segmentId == highlightedSegmentId && startPointReflects.pointType == highlightedPoint
+                    let reflectedPointHighlighted = !highlighted && startPointReflects && startPointReflects.segmentId == highlight.segmentId && startPointReflects.pointType == highlight.pointType
                     if(x1) contents.push(<circle
                         key="StartControlPoint"
-                        className={cls(classes.controlPoint, { [classes.controlPointHighlighted]: highlighted && highlightedPoint == 'StartControl' || reflectedPointHighlighted })}
+                        className={cls(classes.controlPoint, { [classes.controlPointHighlighted]: highlighted && highlight.pointType == 'StartControl' || reflectedPointHighlighted })}
                         cx={x1 * scale} cy={y1 * scale}
-                        onClick={() => dispatch(startPointReflects
-                            ? PathSegmentsActions.setHighlightedSegment(startPointReflects.segmentId, startPointReflects.pointType)
-                            : PathSegmentsActions.setHighlightedSegment(segment.segmentId, "StartControl")
+                        onClick={() => handleHighlight(startPointReflects
+                            ? {segmentId: startPointReflects.segmentId, pointType: startPointReflects.pointType}
+                            : { segmentId: segment.segmentId, pointType: "StartControl"}
                         )}
                     />)
                     if(x2) contents.push(<circle
                         key="EndControlPoint"
-                        className={cls(classes.controlPoint, { [classes.controlPointHighlighted]: highlighted && highlightedPoint == 'EndControl' })}
+                        className={cls(classes.controlPoint, { [classes.controlPointHighlighted]: highlighted && highlight.pointType == 'EndControl' })}
                         cx={x2 * scale} cy={y2 * scale}
-                        onClick={() => dispatch(PathSegmentsActions.setHighlightedSegment(segment.segmentId, "EndControl"))}
+                        onClick={() => handleHighlight({segmentId: segment.segmentId, pointType: "EndControl"})}
                     />)
                     contents.push(<circle
                         key="EndPoint"
-                        className={cls(classes.controlPoint, { [classes.controlPointHighlighted]: highlighted && highlightedPoint == 'End' })}
+                        className={cls(classes.controlPoint, { [classes.controlPointHighlighted]: highlighted && highlight.pointType == 'End' })}
                         cx={x * scale} cy={y * scale}
-                        onClick={() => dispatch(PathSegmentsActions.setHighlightedSegment(segment.segmentId, 'End'))}
+                        onClick={() => handleHighlight({segmentId: segment.segmentId, pointType: 'End'})}
                     />)
 
                     return <g key={segmentIndex} className={cls(classes.segment, { [classes.segment_highlight]: highlighted })}>{contents}</g>

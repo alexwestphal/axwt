@@ -63,7 +63,7 @@ export const init = (): ThunkAction =>
         if(!dispatch(loadFromLocalStorage())) {
             let elementId = UUID.create()
             dispatch(ElementsActions.newElement('path', elementId))
-            dispatch(ElementsActions.setCurrentElement({ elementType: 'path', elementId }))
+            dispatch(ElementsActions.selectCurrentElement({ elementType: 'path', elementId }))
         }
     }
 

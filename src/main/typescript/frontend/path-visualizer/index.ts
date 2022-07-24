@@ -2,8 +2,6 @@
  * Copyright (c) 2022, Alex Westphal.
  */
 
-import * as React from 'react'
-
 
 import PathVisualizer from './components/PathVisualizer'
 import * as PV from './store'

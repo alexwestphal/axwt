@@ -3,6 +3,7 @@
  */
 
 export * from './Element'
+export * from './PathDefBuilder'
 export * from './PathSegment'
 export * from './PathSegmentHighlight'
 export * from './PathDefinitionParser'

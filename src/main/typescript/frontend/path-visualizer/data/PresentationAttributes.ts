@@ -3,6 +3,13 @@
  */
 
 export interface PresentationAttributes {
-    stroke?: string
-    strokeWidth?: number
+
+
+    'fill'?: string
+    'fill-opacity'?: number
+    'fill-rule'?: 'nonzero' | 'evenodd' | 'inherit'
+
+    'stroke'?: string
+    'stroke-opacity'?: number
+    'stroke-width'?: number
 }

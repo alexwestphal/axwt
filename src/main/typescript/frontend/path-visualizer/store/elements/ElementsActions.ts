@@ -4,7 +4,7 @@
 
 import {Action, createAction, UUID} from '@axwt/core'
 
-import {ElementKey, Element, ElementId, ElementType, PathSegment} from '../../data'
+import {ElementKey, Element, ElementId, ElementType, PathSegment, PresentationAttributes} from '../../data'
 
 export namespace ElementsActions {
 
@@ -16,9 +16,11 @@ export namespace ElementsActions {
 
     export type SetHtmlId = Action<'pv/elements/setHtmlId', string, { elementId: ElementId }>
 
+    export type SetPresentationAttribute = Action<'pv/elements/setPresentationAttribute', any | null, { elementId: ElementId, attrName: keyof PresentationAttributes}>
+
     export type SetShowElement = Action<'pv/elements/setShowElement', boolean, { elementId: ElementId }>
 
-    export type Any = ImportPath | NewElement | SelectCurrentElement | SetHtmlId | SetShowElement
+    export type Any = ImportPath | NewElement | SelectCurrentElement | SetHtmlId | SetPresentationAttribute | SetShowElement
 
 
     export const importPath = (d: string): ImportPath => {
@@ -36,6 +38,9 @@ export namespace ElementsActions {
 
     export const setHtmlId = (elementId: ElementId, value: string): SetHtmlId =>
         createAction('pv/elements/setHtmlId', value, { elementId })
+
+    export const setPresentationAttribute = <K extends keyof PresentationAttributes>(elementId: ElementId, attrName: keyof PresentationAttributes, attrValue: PresentationAttributes[K] | null): SetPresentationAttribute =>
+        createAction('pv/elements/setPresentationAttribute', attrValue, { elementId, attrName })
 
     export const setShowElement = (elementId: ElementId, value: boolean): SetShowElement =>
         createAction('pv/elements/setShowElement', value, { elementId })

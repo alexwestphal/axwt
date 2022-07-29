@@ -4,13 +4,14 @@
 
 import * as React from 'react'
 
-import {Box, Button, TextField} from '@mui/material'
+import {Box, Button, Grid, inputClasses, inputLabelClasses, MenuItem, TextField} from '@mui/material'
 
 import {createClasses} from '@axwt/util'
-import {selectCurrentElement, useThunkDispatch, useTypedSelector} from '../store'
 
+import {ElementsActions, selectCurrentElement, useThunkDispatch, useTypedSelector} from '../store'
 
 import HtmlIdField from './HtmlIdField'
+
 
 
 export const elementPanelClasses = createClasses("ElementPanel", [])
@@ -27,11 +28,17 @@ export const ElementPanel: React.FC = () => {
         className={classes.root}
         sx={{
 
+            [`& .${inputClasses.input}`]: {
+                paddingTop: 1/2,
+                paddingX: 1
+            },
+            [`& .${inputLabelClasses.root}`]: {
+                paddingTop: 1/2,
+                paddingX: 1
+            },
         }}
     >
         <HtmlIdField element={element}/>
-
-
     </Box>
 }
 

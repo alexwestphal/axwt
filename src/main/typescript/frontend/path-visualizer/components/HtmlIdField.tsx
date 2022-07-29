@@ -32,9 +32,9 @@ export const HtmlIdField: React.FC<HtmlIdFieldProps> = ({element}) => {
     return <Box
         className={classes.root}
         sx={{
-            [`& .${inputClasses.root}`]: {
+            [`& .${inputClasses.input}`]: {
                 paddingTop: 1/2,
-                paddingX: 1
+                paddingX: 1,
             },
             [`& .${inputLabelClasses.root}`]: {
                 paddingTop: 1/2,

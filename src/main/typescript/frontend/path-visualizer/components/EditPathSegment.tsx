@@ -74,6 +74,11 @@ export const EditPathSegment: React.FC<EditPathSegmentProps> = ({pathId, segment
         )
     }
 
+    const handleDelete = () => {
+        // TODO Handle deleting implicit commands properly
+        dispatch(PathSegmentsActions.deleteSegment(pathId, segmentId))
+    }
+
     const handleFocus = () => {
         if(highlight?.segmentId != segmentId || highlight?.pointType != null)
             dispatch(PathSegmentsActions.selectHighlight({segmentId, pointType: null}))
@@ -96,11 +101,25 @@ export const EditPathSegment: React.FC<EditPathSegmentProps> = ({pathId, segment
         }
     }
 
-    const handleDelete = () => {
-        // TODO Handle deleting implicit commands properly
-        dispatch(PathSegmentsActions.deleteSegment(pathId, segmentId))
+
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+        if(event.metaKey) {
+            switch(event.key) {
+                case 'Backspace':
+                    event.preventDefault()
+                    handleDelete()
+                    break
+                case 'c':
+                    navigator.clipboard.writeText(PathSegment.toString(segment))
+                    break
+            }
+        }
     }
 
+    const handleNewSegment = () => {
+        setContextMenu(null)
+        dispatch(PathSegmentsActions.newSegment(pathId, segmentId))
+    }
 
     const classes = editPathSegmentClasses
 
@@ -108,6 +127,7 @@ export const EditPathSegment: React.FC<EditPathSegmentProps> = ({pathId, segment
         className={cls(classes.root, { [classes.highlighted]: highlight?.segmentId == segmentId && !highlight.pointType && !highlight.largeArc && !highlight.sweep })}
         onClick={handleFocus}
         onContextMenu={handleContextMenu}
+        onKeyDownCapture={handleKeyDown}
         sx={{
             display: 'flex',
             borderBottom: 1,
@@ -242,7 +262,7 @@ export const EditPathSegment: React.FC<EditPathSegmentProps> = ({pathId, segment
                 </Typography>
             </MenuItem>
             <Divider/>
-            <MenuItem>
+            <MenuItem onClick={handleNewSegment}>
                 <ListItemIcon>
                     <AddIcon fontSize="small"/>
                 </ListItemIcon>

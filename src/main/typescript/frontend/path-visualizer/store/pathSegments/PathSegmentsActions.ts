@@ -11,7 +11,7 @@ export namespace PathSegmentsActions {
 
     export type DeleteSegment = Action<'pv/pathSegments/deleteSegment', null, { pathId: ElementId, segmentId: PathSegmentId }>
 
-    export type NewSegment = Action<'pv/pathSegments/newSegment', PathSegment, { pathId: ElementId, newPathSegmentId: PathSegmentId }>
+    export type NewSegment = Action<'pv/pathSegments/newSegment', PathSegment, { pathId: ElementId, newPathSegmentId: PathSegmentId, afterSegmentId }>
 
     export type SetArgValue = Action<'pv/pathSegments/setArgValue', number, { segmentId: PathSegmentId, argName: string }>
 
@@ -25,10 +25,10 @@ export namespace PathSegmentsActions {
     export const deleteSegment = (pathId: ElementId, segmentId: PathSegmentId): DeleteSegment =>
         createAction('pv/pathSegments/deleteSegment', null, { pathId, segmentId })
 
-    export const newSegment = (pathId: ElementId): NewSegment => {
+    export const newSegment = (pathId: ElementId, afterSegmentId?: PathSegmentId): NewSegment => {
         let segmentId = UUID.create()
         let pathSegment: PathSegment = { segmentId, command: 'M', arguments: { x: 0, y: 0 }, implicit: false }
-        return createAction('pv/pathSegments/newSegment', pathSegment, { pathId, newPathSegmentId: segmentId })
+        return createAction('pv/pathSegments/newSegment', pathSegment, { pathId, newPathSegmentId: segmentId, afterSegmentId })
     }
 
     export const setArgValue = (segmentId: PathSegmentId, argName: string, argValue: number): SetArgValue =>

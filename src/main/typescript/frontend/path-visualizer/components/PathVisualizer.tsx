@@ -13,7 +13,7 @@ import {saveToLocalStorage, useThunkDispatch, useTypedSelector} from '../store'
 import LeftPanel from './LeftPanel'
 
 import RightPanel from './RightPanel'
-import SVGDisplayPanel from './SVGDisplayPanel'
+import SVGDisplayPanel from './display/SVGDisplayPanel'
 
 
 const PathVisualizer: React.FC = () => {

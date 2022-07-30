@@ -10,8 +10,8 @@ import {blueGrey} from '@mui/material/colors'
 
 import {ArrayUtils, cls, createClasses} from '@axwt/util'
 
-import {ViewBox} from '../data'
-import {selectGridLines, useTypedSelector} from '../store'
+import {ViewBox} from '../../data'
+import {selectGridLines, useTypedSelector} from '../../store'
 
 
 

@@ -21,15 +21,26 @@ export const ElementsReducer: Reducer<ElementsState> = produce((draft: Draft<Ele
             return action.payload.elements
 
         // Elements actions
+        case 'pv/elements/deleteElement': {
+            delete draft.byId[action.meta.elementId]
+            if(draft.currentElement.elementId == action.meta.elementId) {
+                draft.currentElement = null
+            }
+            break
+        }
         case 'pv/elements/importPath':
         case 'pv/elements/newElement':
             draft.byId[action.meta.newElementId] = action.payload
+            draft.currentElement = { elementType: action.payload.elementType, elementId: action.payload.elementId }
             break
         case 'pv/elements/selectCurrentElement':
             draft.currentElement = action.payload
             break
         case 'pv/elements/setHtmlId':
             selectElement(draft, action.meta.elementId).htmlId = action.payload
+            break
+        case 'pv/elements/setMainAttribute':
+            selectElement(draft, action.meta.elementId)[action.meta.attrName] = (action.payload == null ? undefined : action.payload)
             break
         case 'pv/elements/setPresentationAttribute': {
             let presentation = selectElement(draft, action.meta.elementId).presentation

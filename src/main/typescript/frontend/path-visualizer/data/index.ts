@@ -9,3 +9,5 @@ export * from './PathSegmentHighlight'
 export * from './PathDefinitionParser'
 export * from './PresentationAttributes'
 export * from './ViewConfig'
+
+export type DisplayOption = 'Grid' | 'Raw' | 'Detail'

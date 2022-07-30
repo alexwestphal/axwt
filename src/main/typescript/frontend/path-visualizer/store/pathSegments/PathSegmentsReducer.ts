@@ -19,6 +19,16 @@ export const PathSegmentsReducer: Reducer<PathSegmentsState> = produce((draft: D
             return action.payload.pathSegments
 
         // Element Actions
+        case 'pv/elements/deleteElement':
+            if(Element.isPath(action.payload)) {
+                for(let segmentId of action.payload.segmentIds) {
+                    delete draft.byId[segmentId]
+                    if(draft.highlight.segmentId == segmentId) {
+                        draft.highlight = null
+                    }
+                }
+            }
+            break
         case 'pv/elements/importPath':
             for(let segment of  action.meta.segments) {
                 draft.byId[segment.segmentId] = segment

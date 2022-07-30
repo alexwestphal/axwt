@@ -5,7 +5,7 @@ import {Box, inputClasses, inputLabelClasses, TextField} from '@mui/material'
 
 import {createClasses} from '@axwt/util'
 
-import {Element} from '../data'
+import {Element} from '../../data'
 import {ElementsActions, useThunkDispatch} from '@axwt/path-visualizer/store'
 
 
@@ -29,23 +29,11 @@ export const HtmlIdField: React.FC<HtmlIdFieldProps> = ({element}) => {
 
     const classes = htmlIdFieldsClasses
 
-    return <Box
-        className={classes.root}
-        sx={{
-            [`& .${inputClasses.input}`]: {
-                paddingTop: 1/2,
-                paddingX: 1,
-            },
-            [`& .${inputLabelClasses.root}`]: {
-                paddingTop: 1/2,
-                paddingX: 1
-            },
-        }}
-    >
+    return <Box className={classes.root}>
         <TextField
             variant="standard"
             fullWidth
-            label="HTML ID"
+            label="id"
             value={element.htmlId || ""}
             onChange={handleChange}
         />

@@ -4,15 +4,17 @@
 
 import * as React from 'react'
 
-import {Box, Button, Grid, inputClasses, inputLabelClasses, MenuItem, TextField} from '@mui/material'
+import {Box, Grid, MenuItem, TextField, Typography} from '@mui/material'
 
 import {createClasses} from '@axwt/util'
 
-import {PresentationAttributes} from '../data'
-import {ElementsActions, selectCurrentElement, useThunkDispatch, useTypedSelector} from '../store'
+import {PresentationAttributes} from '../../data'
+import {ElementsActions, selectCurrentElement, useThunkDispatch, useTypedSelector} from '../../store'
 
 import ColorField from './ColorField'
+import {elementAttributesClasses, elementAttributesStyles} from './ElementAttributes'
 import HtmlIdField from './HtmlIdField'
+import PanelNotAvailable from '../PanelNotAvailable'
 
 
 
@@ -23,6 +25,8 @@ export const PresentationAttributesPanel: React.FC = () => {
     const element = useTypedSelector(selectCurrentElement)
 
     const dispatch = useThunkDispatch()
+
+    if(element == null) return <PanelNotAvailable reason="No element selected."/>
 
     const handleChange = (attrName: keyof PresentationAttributes) => (newValue: string) => {
         if(newValue == "") newValue = null
@@ -35,25 +39,13 @@ export const PresentationAttributesPanel: React.FC = () => {
 
     const classes = presentationAttributesPanelClasses
 
-    return <Box
-        className={classes.root}
-        sx={{
-            [`& .${inputClasses.input}`]: {
-                paddingTop: 1/2,
-                paddingX: 1
-            },
-            [`& .${inputLabelClasses.root}`]: {
-                paddingTop: 1/2,
-                paddingX: 1
-            },
-        }}
-    >
-        <HtmlIdField element={element}/>
+    return <Box className={classes.root} sx={elementAttributesStyles}>
+        <Typography variant="h6" className={elementAttributesClasses.title}>Presentation Attributes</Typography>
         <Grid container>
             <Grid item xs={4}>
                 <ColorField
                     label="fill"
-                    value={element.presentation['fill']}
+                    value={element.presentation['fill'] ?? ""}
                     onChange={handleChange('fill')}
                 />
             </Grid>
@@ -62,7 +54,7 @@ export const PresentationAttributesPanel: React.FC = () => {
                     variant="standard"
                     fullWidth
                     label="fill-opacity"
-                    value={element.presentation['fill-opacity']}
+                    value={element.presentation['fill-opacity'] ?? ""}
                     onChange={(ev) => handleChange('fill-opacity')(ev.target.value)}
                 />
             </Grid>
@@ -87,7 +79,7 @@ export const PresentationAttributesPanel: React.FC = () => {
             <Grid item xs={4}>
                 <ColorField
                     label="stroke"
-                    value={element.presentation['stroke']}
+                    value={element.presentation['stroke'] ?? ""}
                     onChange={handleChange('stroke')}
                 />
             </Grid>
@@ -96,7 +88,7 @@ export const PresentationAttributesPanel: React.FC = () => {
                     variant="standard"
                     fullWidth
                     label="stroke-opacity"
-                    value={element.presentation['stroke-opacity']}
+                    value={element.presentation['stroke-opacity'] ?? ""}
                     onChange={(ev) => handleChange('stroke-opacity')(ev.target.value)}
                 />
             </Grid>
@@ -105,7 +97,7 @@ export const PresentationAttributesPanel: React.FC = () => {
                     variant="standard"
                     fullWidth
                     label="stroke-width"
-                    value={element.presentation['stroke-width']}
+                    value={element.presentation['stroke-width'] ?? ""}
                     onChange={(ev) => handleChange('stroke-width')(ev.target.value)}
                 />
             </Grid>

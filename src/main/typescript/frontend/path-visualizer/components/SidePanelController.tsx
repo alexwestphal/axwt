@@ -22,7 +22,7 @@ export namespace SidePanelControllerProps {
     export interface PanelSpec {
         title: string
         value: string
-        Component: React.ComponentType<{}>
+        Component: React.ComponentType
         available?: boolean
     }
 }
@@ -32,9 +32,13 @@ const sidePanelControllerClasses = createClasses("CompactPanel", ["panelContents
 export const SidePanelController: React.FC<SidePanelControllerProps> = ({className, panels, side, sx = []}) => {
     panels = panels.filter(panel => !!panel) as SidePanelControllerProps.PanelSpec[]
 
-    const [activePanel, setActivePanel] = React.useState(panels.length > 0 ? panels[0].value : null)
+    const [activePanelKey, setActivePanelKey] = React.useState(panels.length > 0 ? panels[0].value : null)
+    const activePanel = activePanelKey && panels.find(panel => panel.value == activePanelKey)
 
-    const ActivePanelComponent = activePanel && panels.find(panel => panel.value == activePanel).Component
+    React.useEffect(() => {
+        // Reset the active panel (if required)
+        if(!activePanel) setActivePanelKey(panels.length > 0 ? panels[0].value : null)
+    }, [panels])
 
     const classes = sidePanelControllerClasses
 
@@ -87,8 +91,8 @@ export const SidePanelController: React.FC<SidePanelControllerProps> = ({classNa
             <TextField
                 className={classes.titleBar_panelSelector}
                 size="small" variant="standard" select
-                value={activePanel ?? ""}
-                onChange={ev => setActivePanel(ev.target.value)}
+                value={activePanelKey ?? ""}
+                onChange={ev => setActivePanelKey(ev.target.value)}
             >
                 {panels.map(panel =>
                     <MenuItem key={panel.value} value={panel.value}>{panel.title}</MenuItem>
@@ -105,7 +109,7 @@ export const SidePanelController: React.FC<SidePanelControllerProps> = ({classNa
             </div>
         </div>
         <div className={classes.panelContents}>
-            {activePanel && React.createElement(ActivePanelComponent, {})}
+            {activePanel && React.createElement(activePanel.Component, {})}
         </div>
     </Box>
 }

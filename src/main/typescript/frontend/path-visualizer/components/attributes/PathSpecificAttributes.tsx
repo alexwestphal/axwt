@@ -4,15 +4,7 @@
 
 import * as React from 'react'
 
-import {Box, Button, Divider, ListItemIcon, ListItemText, Menu, MenuItem, TextField, Typography} from '@mui/material'
-
-import {createClasses} from '@axwt/util'
-
-import {Element} from '../data'
-import { PathSegmentsActions, selectCurrentElement, useThunkDispatch, useTypedSelector} from '../store'
-
-import EditPathSegment from './EditPathSegment'
-import HtmlIdField from '@axwt/path-visualizer/components/HtmlIdField'
+import {Box, Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography} from '@mui/material'
 import ContentCutIcon from '@mui/icons-material/ContentCut'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import ContentPasteIcon from '@mui/icons-material/ContentPaste'
@@ -20,15 +12,18 @@ import AddIcon from '@mui/icons-material/Add'
 import SplitIcon from '@mui/icons-material/CallSplitOutlined'
 import DeleteIcon from '@mui/icons-material/Delete'
 
+import {cls} from '@axwt/util'
+
+import {Element} from '../../data'
+import { PathSegmentsActions,  useThunkDispatch} from '../../store'
+
+import {elementAttributesClasses, ElementAttributesComponent} from './ElementAttributes'
+import EditPathSegment from '../EditPathSegment'
 
 
-const pathSegmentsPanelClasses = createClasses("PathSegmentsPanel", ["segmentList"])
-
-export const PathSegmentsPanel: React.FC = () => {
+export const PathSpecificAttributes: ElementAttributesComponent<Element.Path> = ({element}) => {
 
     const [contextMenu, setContextMenu] = React.useState<{mouseX: number, mouseY: number} | null>(null)
-
-    const path = useTypedSelector(selectCurrentElement) as Element.Path
 
     const dispatch = useThunkDispatch()
 
@@ -46,31 +41,22 @@ export const PathSegmentsPanel: React.FC = () => {
 
     const handleNewSegment = () => {
         setContextMenu(null)
-        dispatch(PathSegmentsActions.newSegment(path.elementId))
+        dispatch(PathSegmentsActions.newSegment(element.elementId))
     }
 
-    const classes = pathSegmentsPanelClasses
+    const classes = elementAttributesClasses
 
     return <Box
-        className={classes.root}
+        className={cls(classes.root, classes.path)}
         onContextMenu={handleContextMenu}
-        sx={{
-            flexGrow: 1,
-
-            [`& .${classes.segmentList}`]: {
-                flex: '1 0 0',
-                marginBottom: 1
-            }
-        }}
     >
-
-        <HtmlIdField element={path}/>
+        <Typography variant="h6" className={classes.title}>Path Segments</Typography>
 
         <div className={classes.segmentList}>
-            {path.segmentIds.map((segmentId, index) =>
+            {element.segmentIds.map((segmentId, index) =>
                 <EditPathSegment
                     key={segmentId}
-                    pathId={path.elementId}
+                    pathId={element.elementId}
                     segmentId={segmentId}
                     first={index==0}
                 />
@@ -132,4 +118,4 @@ export const PathSegmentsPanel: React.FC = () => {
     </Box>
 }
 
-export default PathSegmentsPanel
+export default PathSpecificAttributes

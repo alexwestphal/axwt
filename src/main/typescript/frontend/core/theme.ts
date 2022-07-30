@@ -36,6 +36,9 @@ export const createAXWTTheme = () => {
                 main: blueGrey[700]
             }
         },
+        shape: {
+            borderRadius: 2
+        },
 
         components: {
             MuiAppBar: {

@@ -1,8 +1,8 @@
 
 import * as React from 'react'
 
-import { Box } from '@mui/material'
-import { lighten } from '@mui/material/styles'
+import {Box, useTheme} from '@mui/material'
+import {lighten, Theme} from '@mui/material/styles'
 
 import DragHandleIcon from '@mui/icons-material/DragHandle'
 
@@ -61,6 +61,8 @@ const classes = createClasses("RPL", [
 ])
 
 export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
+
+    const banner = useTheme<Theme>().banner
 
     const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null)
     const handleMenuClick: React.MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -131,9 +133,9 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
         }
     }
 
-    const mainPanelHeight =  bottomPanelOpen ? (1 - bottomPanelHeightF) * (windowHeight - 48) : (windowHeight - 48)
+    const mainPanelHeight =  bottomPanelOpen ? (1 - bottomPanelHeightF) * (windowHeight - banner.height) : (windowHeight - banner.height)
 
-    const bottomPanelProps = { width: windowWidth, height: bottomPanelHeightF * (windowHeight-49) }
+    const bottomPanelProps = { width: windowWidth, height: bottomPanelHeightF * (windowHeight - banner.height - 1) }
 
     const bottomPanel = <>
         <div className={cls(classes.resizeBorder, classes.resizeBorder_row)} onMouseDown={() => setActiveHandle('Bottom')}>
@@ -141,7 +143,7 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
                 <DragHandleIcon/>
             </div>
         </div>
-        <div className={classes.panelBottom} style={{height: bottomPanelHeightF*(windowHeight-48)}}>{props.bottomPanel && React.createElement(props.bottomPanel.Component, bottomPanelProps)}</div>
+        <div className={classes.panelBottom} style={{height: bottomPanelHeightF*(windowHeight - banner.height)}}>{props.bottomPanel && React.createElement(props.bottomPanel.Component, bottomPanelProps)}</div>
     </>
 
     const leftPanelProps: PanelSizingProps = { width: leftPanelWidthF*windowWidth - 1, height: mainPanelHeight }
@@ -175,8 +177,8 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
         onMouseUp={() => setActiveHandle(null)}
         sx={{
             width: '100%',
-            height: 'calc(100vh - 48px)',
-            marginTop: '48px',
+            height: `calc(100vh - ${banner.height}px)`,
+            marginTop: `${banner.height}px`,
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'stretch',
@@ -199,13 +201,14 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
                 height: '1px',
                 cursor: 'row-resize'
             },
-            [`& .${classes.resizeHandle}`]: {
+            [`& .${classes.resizeHandle}`]: theme => ({
                 borderRadius: '6px',
                 backgroundColor: 'whitesmoke',
                 borderColor: `divider`,
-                color: theme => lighten(theme.palette.text.primary, 0.5),
-                zIndex: 1000,
-            },
+                color: lighten(theme.palette.text.primary, 0.5),
+                boxShadow: theme.shadows[1],
+                zIndex: 100,
+            }),
             [`& .${classes.resizeHandle_column}`]: {
                 width: '16px', height: '26px',
                 marginLeft: '-8.5px',

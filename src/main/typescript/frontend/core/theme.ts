@@ -11,7 +11,7 @@ declare module '@mui/material/styles' {
         banner: {
             backgroundColor: string,
             textColor: string,
-            height: string
+            height: number
         }
     }
 
@@ -63,7 +63,7 @@ export const createAXWTTheme = () => {
         banner: {
             backgroundColor: blueGrey[700],
             textColor: DefaultTheme.palette.getContrastText(blueGrey[700]),
-            height: '48px'
+            height: 64
         },
         palette: {
 

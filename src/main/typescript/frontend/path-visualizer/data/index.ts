@@ -2,6 +2,7 @@
  * Copyright (c) 2022, Alex Westphal.
  */
 
+export * from './Color'
 export * from './Element'
 export * from './PathDefBuilder'
 export * from './PathSegment'

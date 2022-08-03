@@ -13,8 +13,8 @@ export const AXWT: React.FC = (props) => {
 
         [`& .${axwtClasses.body}`]: {
             width: '100%',
-            height: `calc(100vh - ${theme.banner.height})`,
-            marginTop: theme.banner.height,
+            height: `calc(100vh - ${theme.banner.height}px)`,
+            marginTop: `${theme.banner.height}px`,
             flexGrow: 1,
             flexBasis: 0,
 

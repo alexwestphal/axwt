@@ -7,7 +7,7 @@ import * as React from 'react'
 import {
     Box,
     Button,
-    Checkbox,
+    Checkbox, Chip,
     ClickAwayListener,
     Container, Dialog, DialogActions, DialogContent, DialogTitle, Divider,
     IconButton,
@@ -98,7 +98,10 @@ export const UserList: React.FC = () => {
                 </div>
                 <Button variant="contained" startIcon={<AddIcon/>}>Add User</Button>
             </div>
-
+            <Box mb={1}>
+                <Chip label="role IN Users,Managers" onDelete={() => {}}/>
+                <Chip label="status = Active" onDelete={() => {}}/>
+            </Box>
             <TableContainer component={Paper}>
                 <Table size="small">
                     <TableHead>

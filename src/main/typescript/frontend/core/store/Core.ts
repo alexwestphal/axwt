@@ -16,7 +16,7 @@ import {ErrorActions, ErrorReducer, ErrorState} from './error'
 
 
 
-export type ExtraArgs = { coreServerAPI: CoreServerAPI, windows: Map<UUID, Window> }
+export type ExtraArgs = { coreServerAPI: CoreServerAPI, windows: Map<UUID, Window>, handles: Map<UUID, any> }
 
 export type AnyAction = CommunicationActions.Any | ConfigActions.Any | DisplayActions.Any | ErrorActions.Any | RegisterModule
 

@@ -6,7 +6,7 @@
       "@axwt/*":  ["./*"]
     },
     "sourceMap": true,
-    "target": "es2021",
+    "target": "es2022",
     "moduleResolution": "node",
     "module": "esNext",
     "allowSyntheticDefaultImports": true,

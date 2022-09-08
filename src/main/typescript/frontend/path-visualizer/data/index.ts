@@ -9,6 +9,7 @@ export * from './PathSegment'
 export * from './PathSegmentHighlight'
 export * from './PathDefinitionParser'
 export * from './PresentationAttributes'
+export * from './SnackbarOptions'
 export * from './ViewConfig'
 
 export type DisplayOption = 'Grid' | 'Raw' | 'Detail'

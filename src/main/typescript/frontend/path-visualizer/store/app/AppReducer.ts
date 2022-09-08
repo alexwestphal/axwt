@@ -12,5 +12,11 @@ export const AppReducer: Reducer<AppState> = produce((draft: Draft<AppState>, ac
     switch(action.type) {
         case 'pv/app/loadState':
             return action.payload.app
+        case 'pv/app/snackbarSet':
+            draft.snackbar = action.payload
+            break
+        case 'pv/app/snackbarUnset':
+            draft.snackbar = null
+            break
     }
 }, AppState.Default)

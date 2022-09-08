@@ -2,7 +2,7 @@
  * Copyright (c) 2022, Alex Westphal.
  */
 
-import {Action, Core, DisplayActions, UUID} from '@axwt/core'
+import {Action, Core, DisplayActions, KeyboardShortcut, StandardShortcuts, UUID} from '@axwt/core'
 import {combineReducers} from 'redux'
 
 
@@ -60,7 +60,7 @@ export const init = (): ThunkAction =>
     (dispatch) => {
         dispatch(DisplayActions.setTitle("Path Visualizer"))
 
-        if(!dispatch(loadFromLocalStorage())) {
+        if(!dispatch(AppActions.loadFromLocalStorage())) {
             let elementId = UUID.create()
             dispatch(ElementsActions.newElement('path', elementId))
             dispatch(ElementsActions.selectCurrentElement({ elementType: 'path', elementId }))
@@ -68,20 +68,13 @@ export const init = (): ThunkAction =>
     }
 
 
-export const loadFromLocalStorage = (): ThunkAction<boolean> =>
-    (dispatch) => {
-        let stateStr = localStorage.getItem("OPCE-PV-SAVEDATA")
-        if(null == stateStr) return false
-
-        let state = JSON.parse(stateStr)
-        dispatch(AppActions.loadState(state))
-        return true
-    }
-
-export const saveToLocalStorage = (): ThunkAction =>
+export const handleKeyboardShortcut = (shortcut: KeyboardShortcut): ThunkAction =>
     (dispatch, getState) => {
-        let state = getState().pv
+        console.log(`PV.handleKeyboardShortcut: ${shortcut.shortcutId}`)
 
-        let stateStr = JSON.stringify(state)
-        localStorage.setItem("OPCE-PV-SAVEDATA", stateStr)
+        switch(shortcut.shortcutId) {
+            case StandardShortcuts.FileSave.shortcutId:
+                dispatch(AppActions.save())
+                break
+        }
     }

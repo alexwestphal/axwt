@@ -6,9 +6,8 @@ import {Language} from '@axwt/core/i18n'
 
 export interface ConfigState {
     accessToken: string
-    appFlags: AppOpts,
+    appFlags: AppOpts
     language: Language
-
 }
 export namespace ConfigState {
     export const Default: ConfigState = {

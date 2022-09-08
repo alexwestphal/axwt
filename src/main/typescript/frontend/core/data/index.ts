@@ -1,6 +1,8 @@
 
 
 export * from './AppOpts'
-export * from './HtmlString'
-export * from './UUID'
 export * from './AXWTAnomaly'
+export * from './HtmlString'
+export * from './KeyboardShortcut'
+export * from './MenuAction'
+export * from './UUID'

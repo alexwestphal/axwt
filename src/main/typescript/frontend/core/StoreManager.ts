@@ -23,7 +23,7 @@ export class StoreManager {
 
     constructor() {
         let coreServerAPI = new CoreServerAPI()
-        this.extraArgs = { coreServerAPI: coreServerAPI, windows: new Map() }
+        this.extraArgs = { coreServerAPI: coreServerAPI, windows: new Map(), handles: new Map() }
 
         this.reducers = Core.Reducers
 

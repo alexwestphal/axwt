@@ -6,7 +6,7 @@
 import PathVisualizer from './components/PathVisualizer'
 import * as PV from './store'
 
-import {Module, createModuleLauncher} from '@axwt/core'
+import {Module, createModuleLauncher, StandardShortcuts} from '@axwt/core'
 
 export const PVModule: Module = {
 
@@ -19,7 +19,15 @@ export const PVModule: Module = {
 
     render: PathVisualizer,
 
-    initAction: PV.init
+    initAction: PV.init,
+
+    keyboardShortcuts: [
+        StandardShortcuts.ActionRedo, StandardShortcuts.ActionUndo,
+        StandardShortcuts.ContentCopy, StandardShortcuts.ContentCut, StandardShortcuts.ContentPaste,
+        StandardShortcuts.FileOpen, StandardShortcuts.FileSave, StandardShortcuts.FileSaveAs
+    ],
+
+    onKeyboardShortcut: PV.handleKeyboardShortcut
 }
 
 export default createModuleLauncher(PVModule)

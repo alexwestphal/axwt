@@ -14,14 +14,15 @@ import {
     Toolbar,
     Tooltip, Typography
 } from '@mui/material'
+import {SvgIconProps} from '@mui/material/SvgIcon'
 import ArrowRightIcon from '@mui/icons-material/ArrowRight'
 
-import {UUID} from '@axwt/core'
 import {cls, createClasses} from '@axwt/util'
 
 import * as Core from '../store'
-import {SvgIconProps} from '@mui/material/SvgIcon'
+
 import BlankIcon from '@axwt/core/icons/Blank'
+import {KeyboardShortcut} from '@axwt/core'
 
 
 
@@ -46,6 +47,8 @@ export interface ControlBarProps {
     rightDrawerControl?: DrawerControl
 
     menus?: MenuSpec[]
+
+    onMenuAction?: (actionId: string) => void
 }
 
 export const ControlBarContext = React.createContext<[ControlBarProps, (props: ControlBarProps) => void]>([{}, () => {}])
@@ -175,40 +178,36 @@ export interface DrawerControl {
 export interface MenuSpec {
     label: string
     id: string
-    menuItems: MenuItemSpec[]
+    menuItems: (MenuItemSpec | SubmenuSpec)[]
 }
+
+export interface SubmenuSpec {
+    label: string
+    id: string
+    divider?: boolean
+    icon?: React.ComponentType<SvgIconProps>
+    submenuItems: MenuItemSpec[]
+}
+
+const isSubMenuSpec = (menuItem: MenuItemSpec | SubmenuSpec): menuItem is SubmenuSpec =>
+    (menuItem as SubmenuSpec).submenuItems !== undefined
 
 export interface MenuItemSpec {
     label: string
-    id?: string
-    onClick: React.MouseEventHandler<HTMLElement>
+    actionId: string
 
     divider?: boolean
     icon?: React.ComponentType<SvgIconProps>
-    keyboardShortcut?: string
+    keyboardShortcut?: KeyboardShortcut
 
-    submenuItems?: MenuItemSpec[]
 }
 
 
 export const ControlBar: React.FC<ControlBarProps> = (props) => {
     const [currentProps, setProps] = React.useContext(ControlBarContext)
     React.useEffect(() => {
-        // Add IDs to and menus/items that dont have them already
-        let patchedMenus = props.menus.map(menu => ({
-            ...menu,
-            id: menu.id ?? UUID.create(),
-            menuItems: menu.menuItems.map(menuItem => ({
-                ...menuItem,
-                id: menuItem.id ?? UUID.create(),
-                submenuItems: menuItem.submenuItems?.map(submenuItem => ({
-                    ...submenuItem,
-                    id: submenuItem.id ?? UUID.create()
-                }))
-            }))
-        }))
 
-        setProps({ ...props, menus: patchedMenus })
+        setProps(props)
         return () => { setProps({}) }
     }, [props])
 
@@ -220,9 +219,10 @@ type OpenMenu = { id: string, anchorEl: HTMLElement }
 
 interface ControlBarMenusProps {
     menus?: MenuSpec[]
+    onMenuAction?: (actionId: string) => void
 }
 
-const ControlBarMenus: React.FC<ControlBarMenusProps> = ({menus = []}) => {
+const ControlBarMenus: React.FC<ControlBarMenusProps> = ({menus = [], onMenuAction}) => {
     const [openMenu, setOpenMenu] = React.useState<OpenMenu | null>(null)
     const [openSubmenu, setOpenSubmenu] = React.useState<OpenMenu | null>(null)
 
@@ -242,32 +242,33 @@ const ControlBarMenus: React.FC<ControlBarMenusProps> = ({menus = []}) => {
     }
 
     const handleMenuItemClick = (menuItemSpec: MenuItemSpec) => (event: React.MouseEvent<HTMLElement>) => {
-        if(menuItemSpec.submenuItems) {
-            // Has a submenu
-            setOpenSubmenu({ id: menuItemSpec.id, anchorEl: event.currentTarget })
-        } else {
-            // Normal menu item
-            handleClose()
-            menuItemSpec.onClick(event)
-        }
-
+        handleClose()
+        if(onMenuAction) onMenuAction(menuItemSpec.actionId)
     }
 
     const handleMenuItemHover = (menuItemSpec: MenuItemSpec) => (event: React.MouseEvent<HTMLElement>) => {
         if(openSubmenu) {
-            if(openSubmenu.id == menuItemSpec.id) {
+            if(openSubmenu.id == menuItemSpec.actionId) {
                 // Submenu is already open, do nothing
-            } else if(menuItemSpec.submenuItems) {
+            } else if(isSubMenuSpec(menuItemSpec)) {
                 // Different submenu is open, open this one instead
-                setOpenSubmenu({ id: menuItemSpec.id, anchorEl: event.currentTarget })
+                setOpenSubmenu({ id: menuItemSpec.actionId, anchorEl: event.currentTarget })
             } else {
                 // Different submenu is open and not one here, close it
                 setOpenSubmenu(null)
             }
-        } else if(menuItemSpec.submenuItems) {
-            // have a submenu, so open it
-            setOpenSubmenu({ id: menuItemSpec.id, anchorEl: event.currentTarget })
         }
+    }
+
+    const handleSubmenuClick = (submenuSpec: SubmenuSpec) => (event: React.MouseEvent<HTMLElement>) => {
+        setOpenSubmenu({ id: submenuSpec.id, anchorEl: event.currentTarget })
+    }
+    const handleSubmenuHover = (submenuSpec: SubmenuSpec) => (event: React.MouseEvent<HTMLElement>) => {
+        if(!openSubmenu || openSubmenu?.id != submenuSpec.id) {
+            // Open sub menu if not already open
+            setOpenSubmenu({ id: submenuSpec.id, anchorEl: event.currentTarget })
+        }
+
     }
 
     const handleListKeyDown = (event: React.KeyboardEvent) => {
@@ -314,65 +315,87 @@ const ControlBarMenus: React.FC<ControlBarMenusProps> = ({menus = []}) => {
                                 onKeyDown={handleListKeyDown}
                             >
                                 {menuSpec.menuItems.map((menuItem, menuItemIndex) => {
-                                    let subMenuLabelId = `${menuItem.id}-label`
-                                    let isSubmenuOpen = openSubmenu ? openSubmenu.id == menuItem.id : false
+                                    if(isSubMenuSpec(menuItem)) {
+                                        // Submenu
+                                        let subMenuId = `${menuSpec.id}-${menuItem.id}`
+                                        let subMenuLabelId = `${subMenuId}-label`
+                                        let isSubmenuOpen = openSubmenu ? openSubmenu.id == menuItem.id : false
 
-                                    return <MenuItem
-                                        key={menuItemIndex}
-                                        id={subMenuLabelId}
-                                        divider={menuItem.divider}
-                                        onClick={handleMenuItemClick(menuItem)}
-                                        onMouseEnter={handleMenuItemHover(menuItem)}
-                                    >
-                                        <ListItemIcon>
-                                            {React.createElement(menuItem.icon ?? BlankIcon, { fontSize: 'small' })}
-                                        </ListItemIcon>
-                                        <ListItemText>
-                                            {menuItem.label}
-                                        </ListItemText>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {menuItem.submenuItems
-                                                ? <ArrowRightIcon fontSize="small"/>
-                                                : menuItem.keyboardShortcut ?? ""
-                                            }
-                                        </Typography>
-                                        { menuItem.submenuItems && <Popper
-                                            anchorEl={openSubmenu?.anchorEl}
-                                            open={isSubmenuOpen}
-                                            placement="right-start"
-                                            role={undefined}
-                                            disablePortal
+                                        return <MenuItem
+                                            key={subMenuId}
+                                            id={subMenuId}
+                                            divider={menuItem.divider}
+                                            onClick={handleSubmenuClick(menuItem)}
+                                            onMouseEnter={handleSubmenuHover(menuItem)}
                                         >
-                                            <Paper sx={{ width: 200 }}>
-                                                <MenuList
-                                                    id={menuItem.id}
-                                                    dense
-                                                    autoFocusItem={isSubmenuOpen}
-                                                    aria-labelledby={subMenuLabelId}
-                                                    onKeyDown={handleListKeyDown}
-                                                >
-                                                    {menuItem.submenuItems.map((submenuItem, submenuItemIndex) => {
+                                            <ListItemIcon>
+                                                {React.createElement(menuItem.icon ?? BlankIcon, { fontSize: 'small' })}
+                                            </ListItemIcon>
+                                            <ListItemText>
+                                                {menuItem.label}
+                                            </ListItemText>
+                                            <Typography variant="body2" color="text.secondary">
+                                                <ArrowRightIcon fontSize="small"/>
+                                            </Typography>
+                                            <Popper
+                                                anchorEl={openSubmenu?.anchorEl}
+                                                open={isSubmenuOpen}
+                                                placement="right-start"
+                                                role={undefined}
+                                                disablePortal
+                                            >
+                                                <Paper sx={{ width: 200 }}>
+                                                    <MenuList
+                                                        id={subMenuId}
+                                                        dense
+                                                        autoFocusItem={isSubmenuOpen}
+                                                        aria-labelledby={subMenuLabelId}
+                                                        onKeyDown={handleListKeyDown}
+                                                    >
+                                                        {menuItem.submenuItems.map((submenuItem, submenuItemIndex) => {
 
-                                                        return <MenuItem
-                                                            key={submenuItemIndex}
-                                                            divider={submenuItem.divider}
-                                                            onClick={handleMenuItemClick(submenuItem)}
-                                                        >
-                                                            <ListItemIcon>
-                                                                {React.createElement(submenuItem.icon ?? BlankIcon, { fontSize: 'small' })}
-                                                            </ListItemIcon>
-                                                            <ListItemText>
-                                                                {submenuItem.label}
-                                                            </ListItemText>
-                                                            <Typography variant="body2" color="text.secondary">
-                                                                {submenuItem.keyboardShortcut ?? ""}
-                                                            </Typography>
-                                                        </MenuItem>
-                                                    })}
-                                                </MenuList>
-                                            </Paper>
-                                        </Popper>}
-                                    </MenuItem>
+                                                            return <MenuItem
+                                                                key={submenuItemIndex}
+                                                                divider={submenuItem.divider}
+                                                                onClick={handleMenuItemClick(submenuItem)}
+                                                            >
+                                                                <ListItemIcon>
+                                                                    {React.createElement(submenuItem.icon ?? BlankIcon, { fontSize: 'small' })}
+                                                                </ListItemIcon>
+                                                                <ListItemText>
+                                                                    {submenuItem.label}
+                                                                </ListItemText>
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    {KeyboardShortcut.shortcutString(submenuItem.keyboardShortcut)}
+                                                                </Typography>
+                                                            </MenuItem>
+                                                        })}
+                                                    </MenuList>
+                                                </Paper>
+                                            </Popper>
+                                        </MenuItem>
+                                    } else {
+                                        let itemId = `${menuSpec.id}-${menuItem.actionId}`
+
+                                        // Normal item
+                                        return <MenuItem
+                                            key={itemId}
+                                            id={itemId}
+                                            divider={menuItem.divider}
+                                            onClick={handleMenuItemClick(menuItem)}
+                                            onMouseEnter={handleMenuItemHover(menuItem)}
+                                        >
+                                            <ListItemIcon>
+                                                {React.createElement(menuItem.icon ?? BlankIcon, { fontSize: 'small' })}
+                                            </ListItemIcon>
+                                            <ListItemText>
+                                                {menuItem.label}
+                                            </ListItemText>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {KeyboardShortcut.shortcutString(menuItem.keyboardShortcut)}
+                                            </Typography>
+                                        </MenuItem>
+                                    }
                                 })}
                             </MenuList>
                         </Paper>

@@ -2,17 +2,14 @@
 import * as React from 'react'
 
 import {Box, useTheme} from '@mui/material'
+import {grey} from '@mui/material/colors'
 import {lighten, Theme} from '@mui/material/styles'
 
 import DragHandleIcon from '@mui/icons-material/DragHandle'
 
 import {cls, createClasses, useWindowSize} from '@axwt/util'
 
-import * as Core from '../store'
-
 import DragHandleVerticalIcon from '../icons/DragHandleVertical'
-
-
 
 
 
@@ -228,7 +225,8 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
 
             [`& .${classes.panelMain}`]: {
                 flexGrow: 1,
-                overflow: 'hidden'
+                overflow: 'hidden',
+                backgroundColor: grey[50]
             },
             [`& .${classes.panelRight}`]: {
             },

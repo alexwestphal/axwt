@@ -8,8 +8,7 @@ import CircleIcon from '@mui/icons-material/CircleOutlined'
 import RectangleIcon from '@mui/icons-material/RectangleOutlined'
 import ShapesIcon from '@mui/icons-material/Interests'
 
-import {CommunicationActions, ControlBar, Core, SaveButton, StandardMenuActions} from '@axwt/core'
-import ResizeablePanelLayout from '@axwt/core/components/ResizeablePanelLayout'
+import {CommunicationActions, ControlBar, Core, ResizeablePanelLayout, SaveButton, StandardMenuActions} from '@axwt/core'
 
 import {AppActions, useThunkDispatch, useTypedSelector} from '../store'
 

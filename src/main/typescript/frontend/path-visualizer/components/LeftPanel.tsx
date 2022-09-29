@@ -4,10 +4,10 @@
 
 import * as React from 'react'
 
+import {SidePanelController} from '@axwt/core'
+
 import ElementListPanel from './ElementListPanel'
 import LibraryPanel from './LibraryPanel'
-import SidePanelController from './SidePanelController'
-
 
 
 export const LeftPanel: React.FC = () => {

@@ -6,6 +6,7 @@ import {Box, Container, Paper} from '@mui/material'
 import {blueGrey} from '@mui/material/colors'
 import ArchitectureIcon from '@mui/icons-material/ArchitectureOutlined'
 import PeopleIcon from '@mui/icons-material/PeopleOutline'
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 
 import {DisplayActions, useThunkDispatch} from '@axwt/core/store'
 import {cls, createClasses} from '@axwt/util'
@@ -55,6 +56,10 @@ export const Dashboard: React.FC = () => {
             },
     }}>
         <Container className={classes.container}>
+            <Paper className={classes.module} square onClick={() => setRedirect("/http-tester")}>
+                <SwapHorizIcon className={classes.moduleIcon}/>
+                <div className={classes.moduleText}>HTTP Tester</div>
+            </Paper>
             <Paper className={classes.module} square onClick={() => setRedirect("/path-visualizer")}>
                 <ArchitectureIcon className={classes.moduleIcon}/>
                 <div className={classes.moduleText}>Path Visualizer</div>

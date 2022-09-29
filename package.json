@@ -39,6 +39,7 @@
     "@mui/x-date-pickers": "^5.0.0-alpha.7",
     "date-fns": "^2.23.0",
     "focus-within-polyfill": "^5.1.0",
+    "idb": "^7.0.2",
     "immer": "^8.0.1",
     "react": "^17.0.1",
     "react-dnd": "^14.0.2",

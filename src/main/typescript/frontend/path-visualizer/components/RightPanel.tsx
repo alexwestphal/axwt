@@ -4,7 +4,7 @@
 
 import * as React from 'react'
 
-import SidePanelController from './SidePanelController'
+import SidePanelController from '../../core/components/SidePanelController'
 import PresentationAttributesPanel from './attributes/PresentationAttributesPanel'
 import ElementPanel from './attributes/ElementPanel'
 

@@ -16,7 +16,7 @@ import RawIcon from '@mui/icons-material/RawOn'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 
-import {PanelSizingProps} from '@axwt/core/components/ResizeablePanelLayout'
+import {PanelSizingProps} from '@axwt/core'
 import {createClasses} from '@axwt/util'
 
 import {DisplayOption, Element} from '../../data'

@@ -11,7 +11,10 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {DisplayActions, useThunkDispatch} from '@axwt/core/store'
 import {cls, createClasses} from '@axwt/util'
 
+import SudokuIcon from '../icons/SudokuIcon'
+
 import {axwtClasses} from './AXWT'
+
 
 
 const dashboardClasses = createClasses("Dashboard", ["container", "module", "moduleIcon", "moduleText"])
@@ -63,6 +66,10 @@ export const Dashboard: React.FC = () => {
             <Paper className={classes.module} square onClick={() => setRedirect("/path-visualizer")}>
                 <ArchitectureIcon className={classes.moduleIcon}/>
                 <div className={classes.moduleText}>Path Visualizer</div>
+            </Paper>
+            <Paper className={classes.module} square onClick={() => setRedirect("/sudoku")}>
+                <SudokuIcon className={classes.moduleIcon}/>
+                <div className={classes.moduleText}>Sudoku</div>
             </Paper>
             <Paper className={classes.module} square onClick={() => setRedirect("/user-list")}>
                 <PeopleIcon className={classes.moduleIcon}/>

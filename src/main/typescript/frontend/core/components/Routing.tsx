@@ -6,6 +6,7 @@ import Dashboard from './Dashboard'
 
 const HTModule = React.lazy(() => import("@axwt/http-tester"))
 const PVModule = React.lazy(() => import("@axwt/path-visualizer"))
+const SUModule = React.lazy(() => import("@axwt/sudoku"))
 const ULModule = React.lazy(() => import("@axwt/user-list"))
 
 export const Routing: React.FC = () => <Switch>
@@ -14,6 +15,9 @@ export const Routing: React.FC = () => <Switch>
     </Route>
     <Route path="/path-visualizer">
         <PVModule/>
+    </Route>
+    <Route path="/sudoku">
+        <SUModule/>
     </Route>
     <Route path="/user-list">
         <ULModule/>

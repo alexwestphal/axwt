@@ -1,10 +1,17 @@
 
 import * as React from 'react'
 
-import {Box, Button} from '@mui/material'
+import {Box, Button, ButtonGroup, IconButton, Tooltip} from '@mui/material'
+import {lightBlue, grey} from '@mui/material/colors'
+import UndoIcon from '@mui/icons-material/Undo'
+import RedoIcon from '@mui/icons-material/Redo'
+import EditIcon from '@mui/icons-material/Edit'
+import EditOffIcon from '@mui/icons-material/EditOff'
 
 import {createClasses} from '@axwt/util'
 
+
+import {BoardUtils, CellCoordinate} from '../data'
 import {
     PlayActions,
     selectBoardState,
@@ -15,7 +22,8 @@ import {
 
 
 import SudokuBoard, {BoardCell, BoardCellProps, SudokuBoardProps} from './SudokuBoard'
-import {BoardUtils, CellCoordinate} from '@axwt/sudoku/data'
+
+
 
 const playModeClasses = createClasses('PlayMode', ['overlay'])
 
@@ -38,12 +46,19 @@ const PlayMode: React.FC = () => {
         })
     }
 
+    const handeBlur = () => setActiveCellCoord(null)
+
     const handleKeyDown: React.KeyboardEventHandler = (ev) => {
         if(activeCellCoord == null) return
         let {x,y} = activeCellCoord
         let isPredefinedCell = board.cellValues[x + y * n2] > 0
         if('1' <= ev.key && ev.key <= '9' && !isPredefinedCell) {
-            dispatch(PlayActions.setCellValue(x, y, parseInt(ev.key)))
+            let value = parseInt(ev.key)
+            if(playState.entryMode == 'Normal') {
+                dispatch(PlayActions.setCellValue(x, y, value))
+            } else if(playState.entryMode == 'Note') {
+                dispatch(PlayActions.toggleNote(x, y, value))
+            }
         } else switch(ev.key) {
             case 'ArrowDown':
                 if(y < n2-1) setActiveCellCoord({x: x, y: y+1})
@@ -99,7 +114,7 @@ const PlayMode: React.FC = () => {
             </div>
         </> }
         { playState.gameStage == 'Play' && <>
-            <SudokuBoard n={n} onClick={handleClick} onKeyDown={handleKeyDown}>
+            <SudokuBoard n={n} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown}>
                 {cellCoords.map((cellCoord, index) => {
                     let {x,y} = cellCoord
                     let cell = playState.cells[index]
@@ -123,7 +138,7 @@ const PlayMode: React.FC = () => {
                         value={cell.value}
                         valueColor={cell.prefilled ? 'value' : cell.valid ? 'guess' : 'wrong' }
                         highlight={highlight}
-
+                        notes={cell.notes}
                     />
                 })}
             </SudokuBoard>
@@ -136,3 +151,34 @@ const PlayMode: React.FC = () => {
 }
 
 export default PlayMode
+
+
+export const PlayModeControls: React.FC = () => {
+
+    const playState = useTypedSelector(selectPlayState)
+    const dispatch = useThunkDispatch()
+
+    let notesMode = playState.entryMode == 'Note'
+
+    return playState.gameStage == 'Play' && <>
+        <ButtonGroup>
+            <Tooltip title="Toggle Notes Mode">
+                <IconButton
+                    onClick={() => dispatch(PlayActions.setEntryMode(notesMode ? 'Normal' : 'Note'))}
+                    sx={{ color: notesMode ? lightBlue[500] : grey[500] }}
+                >
+                    {notesMode ? <EditIcon/> : <EditOffIcon/>}
+                </IconButton>
+            </Tooltip>
+        </ButtonGroup>
+
+        <ButtonGroup>
+            <IconButton>
+                <UndoIcon/>
+            </IconButton>
+            <IconButton>
+                <RedoIcon/>
+            </IconButton>
+        </ButtonGroup>
+    </>
+}

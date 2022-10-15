@@ -32,7 +32,7 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
             // Set the cell value
             cell.value = value
 
-            // Scan for conflicts
+            // Scan for conflicts and clear notes
             for(let xi=0; xi<n2; xi++) if(xi != x) { // check each cell in column except the current one
                 let otherCell = draft.cells[xi + y * n2]
                 if(value == otherCell.value) {
@@ -41,6 +41,7 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
                     otherCell.conflicts.push(cellIndex)
                     otherCell.valid = false
                 }
+                ArrayUtils.remove(otherCell.notes, value)
             }
             for(let yi=0; yi<n2; yi++) if(yi != y) { // check each cell in column except the current one
                 let otherCell = draft.cells[x + yi * n2]
@@ -50,6 +51,7 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
                     otherCell.conflicts.push(cellIndex)
                     otherCell.valid = false
                 }
+                ArrayUtils.remove(otherCell.notes, value)
             }
             let sx = Math.floor(x/n), sy = Math.floor(y/n)
             for(let yi = 0; yi < n; yi++) { // check each cell in sector except those in the same column or row
@@ -63,16 +65,28 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
                         otherCell.conflicts.push(cellIndex)
                         otherCell.valid = false
                     }
+                    ArrayUtils.remove(otherCell.notes, value)
                 }
             }
             break
         }
+        case 'su/play/setEntryMode':
+            draft.entryMode = action.payload
+            break
         case 'su/play/start':
-            let n = action.meta.boardSize
             draft.boardSize = action.meta.boardSize
             draft.cells = CellState.createArray(action.payload)
             draft.gameStage = 'Play'
             break
+        case 'su/play/toggleNote': {
+            let {x,y} = action.meta, n = draft.boardSize, n2 = n*n
+            let notes = draft.cells[x + y * n2].notes
+
+            if(notes.includes(action.payload)) ArrayUtils.remove(notes, action.payload)
+            else notes.push(action.payload)
+
+            break
+        }
     }
 }, PlayState.Default)
 

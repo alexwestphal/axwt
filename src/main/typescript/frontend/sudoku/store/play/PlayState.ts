@@ -3,7 +3,7 @@ import {BoardSize} from '../../data'
 
 export interface PlayState {
     gameStage: 'Init' | 'Play' | 'Done'
-    entryMode: 'Normal' | 'Note'
+    entryMode: PlayEntryMode
     boardSize: BoardSize
     cells: CellState[]
 }
@@ -16,6 +16,8 @@ export namespace PlayState {
         cells: []
     }
 }
+
+export type PlayEntryMode = 'Normal' | 'Note'
 
 export interface CellState {
     value: number

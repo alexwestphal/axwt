@@ -1,10 +1,7 @@
 
 import * as React from 'react'
 
-import {Box, Button, ButtonGroup, IconButton, MenuItem, TextField} from '@mui/material'
-import RedoIcon from '@mui/icons-material/Redo'
-import SaveIcon from '@mui/icons-material/Save'
-import UndoIcon from '@mui/icons-material/Undo'
+import {Box, MenuItem, TextField} from '@mui/material'
 
 import {PanelSizingProps} from '@axwt/core'
 import {createClasses} from '@axwt/util'
@@ -12,8 +9,8 @@ import {createClasses} from '@axwt/util'
 import {AppMode} from '../data'
 import {AppActions, selectAppMode, useThunkDispatch, useTypedSelector} from '../store'
 
-import EditMode from './EditMode'
-import PlayMode from './PlayMode'
+import EditMode, {EditModeControls} from './EditMode'
+import PlayMode, {PlayModeControls} from './PlayMode'
 import {sudokuBoardClasses} from './SudokuBoard'
 import SolveMode from './SolveMode'
 
@@ -78,20 +75,8 @@ export const MainPanel: React.FC<PanelSizingProps> = (props) => {
                     <MenuItem value="Solve">Solve</MenuItem>
                 </TextField>
                 <div className={classes.controlsSpacer}></div>
-                <ButtonGroup>
-                    <IconButton>
-                        <UndoIcon/>
-                    </IconButton>
-                    <IconButton>
-                        <RedoIcon/>
-                    </IconButton>
-                </ButtonGroup>
-                <Button
-                    className={classes.saveButton}
-                    variant="contained"
-                    endIcon={<SaveIcon/>}
-                    onClick={() => dispatch(AppActions.quickSave())}
-                >Save</Button>
+                { appMode == 'Define' && <EditModeControls/> }
+                { appMode == 'Play' && <PlayModeControls/>}
             </div>
             { appMode == 'Define' && <EditMode/>}
             { appMode == 'Play' && <PlayMode/>}

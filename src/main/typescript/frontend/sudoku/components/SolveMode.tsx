@@ -8,7 +8,7 @@ import {selectBoardState, selectSolveResult, selectSolveState, useTypedSelector}
 import SudokuBoard, {BoardCell, BoardCellProps} from './SudokuBoard'
 import {Box} from '@mui/material'
 
-type CellData = [number, BoardCellProps['valueColor']]
+type CellData = [number, BoardCellProps['valueType']]
 
 const SolveMode: React.FC = () => {
 
@@ -19,7 +19,7 @@ const SolveMode: React.FC = () => {
     const n = board.boardSize, n2 = n * n, n4 = n2 * n2
 
     const [stepIndex, setStepIndex] = React.useState<number>(0)
-    const [boardState, setBoardState] = React.useState<CellData[]>(board.cellValues.map(v => [v, 'value']))
+    const [boardState, setBoardState] = React.useState<CellData[]>(board.cellValues.map(v => [v, 'Prefilled']))
 
     const setCellState = (x: number, y: number, cell: CellData) => {
         let index = x + y * n2
@@ -36,15 +36,15 @@ const SolveMode: React.FC = () => {
                     let step = result.steps[stepIndex]
                     switch(step.type) {
                         case 'Wrong':
-                            setCellState(step.x, step.y, [step.value, 'wrong'])
+                            setCellState(step.x, step.y, [step.value, 'Conflict'])
                             break
                         case 'Guess':
-                            setCellState(step.x, step.y, [step.value, 'guess'])
+                            setCellState(step.x, step.y, [step.value, 'Guess'])
                             break
                         case 'Correct':
                             break
                         case 'Delete':
-                            setCellState(step.x, step.y, [step.value, 'delete'])
+                            setCellState(step.x, step.y, [step.value, 'None'])
                             break
                     }
                     setStepIndex(stepIndex+1)
@@ -56,7 +56,7 @@ const SolveMode: React.FC = () => {
             case 'Reset':
                 if(stepIndex > 0) {
                     setStepIndex(0)
-                    setBoardState(board.cellValues.map(v => [v, 'value']))
+                    setBoardState(board.cellValues.map(v => [v, 'Prefilled']))
                 }
                 break
         }
@@ -66,7 +66,7 @@ const SolveMode: React.FC = () => {
 
     const displayedState: CellData[] = solveState.playback == 'Show'
         ? ArrayUtils.range(0, n4).map(i =>
-            board.cellValues[i] > 0 ? [board.cellValues[i], 'value'] : [result.solution[i], 'correct']
+            board.cellValues[i] > 0 ? [board.cellValues[i], 'Prefilled'] : [result.solution[i], 'None']
         )
         : boardState
 
@@ -79,7 +79,7 @@ const SolveMode: React.FC = () => {
                     n={n} x={x} y={y}
                     value={displayedState[index][0]}
                     highlight="none"
-                    valueColor={displayedState[index][0] > 0 ? displayedState[index][1] : null}
+                    valueType={displayedState[index][0] > 0 ? displayedState[index][1] : null}
                 />
             })}
         </SudokuBoard>

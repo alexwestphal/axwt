@@ -6,6 +6,8 @@ import {Box} from '@mui/material'
 import {ArrayUtils, cls, createClasses} from '@axwt/util'
 import {blue, blueGrey, green, red} from '@mui/material/colors'
 
+import { CellValueType } from '../data'
+
 
 export interface SudokuBoardProps {
     n: number
@@ -16,7 +18,7 @@ export interface SudokuBoardProps {
 
 export const sudokuBoardClasses = createClasses("SudokuBoard", [
     "cell", "cellBackground", "cellNote", "cellHighlight_active", "cellHighlight_match", "cellHighlight_indicate",
-    "cellValue", "cellValue_guess", "cellValue_wrong", "cellValue_delete", "cellValue_correct",
+    "cellValue", "cellValue_conflict", "cellValue_guess", "cellValue_prefilled",
     "gridBorder", "gridLineMajor", "gridLineMinor"
 ])
 
@@ -80,18 +82,14 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({children, n, onClick, o
                     alignmentBaseline: 'central',
                     textAnchor: 'middle',
                 },
+                [`& .${classes.cellValue_conflict}`]: {
+                    fill: red[500],
+                },
                 [`& .${classes.cellValue_guess}`]: {
                     fill: blue[500],
                 },
-                [`& .${classes.cellValue_wrong}`]: {
-                    fill: red[500],
-                },
-                [`& .${classes.cellValue_delete}`]: {
-                    fill: red[500],
-                    textDecoration: "line-through",
-                },
-                [`& .${classes.cellValue_correct}`]: {
-                    fill: green[900],
+                [`& .${classes.cellValue_prefilled}`]: {
+
                 },
 
                 [`& .${classes.gridBorder}`]: {
@@ -164,12 +162,12 @@ export interface BoardCellProps {
     x: number
     y: number
     value: number
-    valueColor?: 'value' | 'guess' | 'wrong' | 'delete' | 'correct'
+    valueType?: CellValueType
     highlight: 'none' | 'active' | 'indicate' | 'match'
     notes?: number[]
 }
 
-export const BoardCell: React.FC<BoardCellProps> = ({n, x, y, value, valueColor, highlight, notes = []}) => {
+export const BoardCell: React.FC<BoardCellProps> = ({n, x, y, value, valueType, highlight, notes = []}) => {
     let w = 100/(n*n) // Cell width (in SVG coord space)
 
     const classes = sudokuBoardClasses
@@ -185,10 +183,9 @@ export const BoardCell: React.FC<BoardCellProps> = ({n, x, y, value, valueColor,
         />
         {value > 0 && <text
             className={cls(classes.cellValue, {
-                [classes.cellValue_guess]: valueColor == 'guess',
-                [classes.cellValue_wrong]: valueColor == 'wrong',
-                [classes.cellValue_delete]: valueColor == 'delete',
-                [classes.cellValue_correct]: valueColor == 'correct',
+                [classes.cellValue_prefilled]: valueType == 'Prefilled',
+                [classes.cellValue_guess]: valueType == 'Guess',
+                [classes.cellValue_conflict]: valueType == 'Conflict' || valueType == 'Conflict-Prefilled',
             })} fontSize={w*.75}
             x={(x+.5)*w} y={(y+.5)*w}
         >{value}</text>}

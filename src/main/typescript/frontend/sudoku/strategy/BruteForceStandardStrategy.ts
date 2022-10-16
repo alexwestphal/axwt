@@ -25,12 +25,12 @@ export class BruteForceStandardStrategy implements Strategy {
                 if(ty != y && current[x+ty*n2] == guess) return false
             }
 
-            // Check if section already contains value
-            let sx = Math.floor(x/n), sy = Math.floor(y/n)
+            // Check if house already contains value
+            let hx = Math.floor(x/n), hy = Math.floor(y/n)
             for(let i = 0; i < n; i++) {
                 for(let j = 0; j < n; j++) {
-                    let tx = sx*n + j
-                    let ty = sy*n + i
+                    let tx = hx*n + j
+                    let ty = hy*n + i
                     if(tx != x && ty != y && current[tx+ty*n2] == guess) return false
                 }
             }

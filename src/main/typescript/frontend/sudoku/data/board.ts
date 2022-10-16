@@ -7,6 +7,8 @@ export type BoardType = 'Standard'
 
 export type CellCoordinate = { x: number, y: number }
 
+export type CellValueType = 'None' | 'Prefilled' | 'Guess' | 'Conflict' | 'Conflict-Prefilled'
+
 export namespace BoardUtils {
 
     export const createCellCoordinateArray = (n: BoardSize): CellCoordinate[] =>
@@ -18,7 +20,7 @@ export namespace BoardUtils {
 
     export const isSameRow = (a: CellCoordinate, b: CellCoordinate): boolean => a.y == b.y
 
-    export const isSameSector = (a: CellCoordinate, b: CellCoordinate, n: BoardSize): boolean =>
+    export const isSameHouse = (a: CellCoordinate, b: CellCoordinate, n: BoardSize): boolean =>
         Math.floor(a.x/n) == Math.floor(b.x/n) && Math.floor(a.y/n) == Math.floor(b.y/n)
 }
 

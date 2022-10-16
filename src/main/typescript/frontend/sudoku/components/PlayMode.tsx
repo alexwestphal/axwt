@@ -3,6 +3,8 @@ import * as React from 'react'
 
 import {Box, Button, ButtonGroup, IconButton, Tooltip} from '@mui/material'
 import {lightBlue, grey} from '@mui/material/colors'
+
+import AutoFixNormalIcon from '@mui/icons-material/AutoFixNormal'
 import UndoIcon from '@mui/icons-material/Undo'
 import RedoIcon from '@mui/icons-material/Redo'
 import EditIcon from '@mui/icons-material/Edit'
@@ -126,7 +128,7 @@ const PlayMode: React.FC = () => {
                         else if(
                             BoardUtils.isSameColumn(cellCoord, activeCellCoord) ||
                             BoardUtils.isSameRow(cellCoord, activeCellCoord) ||
-                            BoardUtils.isSameSector(cellCoord, activeCellCoord, n)
+                            BoardUtils.isSameHouse(cellCoord, activeCellCoord, n)
                         ) highlight = 'indicate'
                         else if(cell.value > 0 && cell.value == activeCell.value)
                             highlight = 'match'
@@ -136,7 +138,7 @@ const PlayMode: React.FC = () => {
                         key={`cell=${x}-${y}`}
                         n={n} x={x} y={y}
                         value={cell.value}
-                        valueColor={cell.prefilled ? 'value' : cell.valid ? 'guess' : 'wrong' }
+                        valueType={cell.valueType}
                         highlight={highlight}
                         notes={cell.notes}
                     />
@@ -162,6 +164,11 @@ export const PlayModeControls: React.FC = () => {
 
     return playState.gameStage == 'Play' && <>
         <ButtonGroup>
+            <Tooltip title="Compute Notes">
+                <IconButton onClick={() => dispatch(PlayActions.generateNotes())}>
+                    <AutoFixNormalIcon/>
+                </IconButton>
+            </Tooltip>
             <Tooltip title="Toggle Notes Mode">
                 <IconButton
                     onClick={() => dispatch(PlayActions.setEntryMode(notesMode ? 'Normal' : 'Note'))}

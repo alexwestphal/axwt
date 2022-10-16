@@ -1,5 +1,5 @@
 
-import {BoardSize} from '../../data'
+import {BoardSize, CellValueType} from '../../data'
 
 export interface PlayState {
     gameStage: 'Init' | 'Play' | 'Done'
@@ -21,8 +21,7 @@ export type PlayEntryMode = 'Normal' | 'Note'
 
 export interface CellState {
     value: number
-    prefilled: boolean
-    valid: boolean
+    valueType: CellValueType
     notes: number[]
     conflicts: number[]
 }
@@ -30,8 +29,7 @@ export interface CellState {
 export namespace CellState {
     export const Default: CellState = ({
         value: 0,
-        prefilled: false,
-        valid: true,
+        valueType: 'None',
         notes: [],
         conflicts: [],
     })
@@ -40,6 +38,6 @@ export namespace CellState {
         prefilledValues.map(pv => ({
             ...Default,
             value: pv,
-            prefilled: pv > 0
+            valueType: pv > 0 ? 'Prefilled' : 'None'
         }))
 }

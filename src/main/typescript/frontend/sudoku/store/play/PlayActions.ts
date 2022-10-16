@@ -16,6 +16,10 @@ export namespace PlayActions {
 
     export type EndGame = Action<'su/play/end'>
 
+    export type GenerateNotes = Action<'su/play/generateNotes'>
+
+    export type SetCellNotes = Action<'su/play/setCellNotes', number[], { x: number, y: number }>
+
     export type SetCellValue = Action<'su/play/setCellValue', number, { x: number, y: number }>
 
     export type SetEntryMode = Action<'su/play/setEntryMode', PlayEntryMode>
@@ -24,14 +28,18 @@ export namespace PlayActions {
 
     export type ToggleNote = Action<'su/play/toggleNote', number, { x: number, y: number }>
 
-    export type Any = ClearCell |EndGame | SetCellValue |  SetEntryMode | StartGame | ToggleNote
+    export type Any = ClearCell | EndGame | GenerateNotes | SetCellNotes | SetCellValue |  SetEntryMode | StartGame | ToggleNote
 
 
     export const clearCell = (x: number, y: number): ClearCell =>
         createAction('su/play/clearCell', null, { x, y })
 
-    export const endGame = (): EndGame =>
-        createAction('su/play/end')
+    export const endGame = (): EndGame => createAction('su/play/end')
+
+    export const generateNotes = (): GenerateNotes => createAction('su/play/generateNotes')
+
+    export const setCellNotes = (x: number, y: number, notes: number[]): SetCellNotes =>
+        createAction('su/play/setCellNotes', notes, { x, y })
 
     export const setCellValue = (x: number, y: number, value: number): SetCellValue =>
         createAction('su/play/setCellValue', value, { x, y })

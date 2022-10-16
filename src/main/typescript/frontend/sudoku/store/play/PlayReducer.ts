@@ -18,6 +18,49 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
             clearCell(draft, action.meta)
             break
 
+        case 'su/play/generateNotes': {
+            let n = draft.boardSize, n2 = n*n
+            for(let y=0; y < n2; y++) {
+                for(let x=0; x < n2; x++) {
+                    let cell = draft.cells[x + y * n2]
+                    if(cell.valueType == 'None') {
+                        let notes = ArrayUtils.range(1, n2+1)
+
+                        // Scan for values already in row
+                        for(let xi=0; xi < n2; xi++) {
+                            let otherCell = draft.cells[xi + y * n2]
+                            if(otherCell.value > 0) ArrayUtils.remove(notes, otherCell.value)
+                        }
+                        //Scan for values already in column
+                        for(let yi=0; yi < n2; yi++) {
+                            let otherCell = draft.cells[x + yi * n2]
+                            if(otherCell.value > 0) ArrayUtils.remove(notes, otherCell.value)
+                        }
+                        // Scan for values already in house
+                        let hx = Math.floor(x/n), hy = Math.floor(y/n)
+                        for(let yi=0; yi < n; yi++) {
+                            for(let xi=0; xi < n; xi++) {
+                                let tx = hx*n + xi
+                                let ty = hy*n + yi
+                                let otherCell = draft.cells[tx + ty * n2]
+                                if(otherCell.value > 0) ArrayUtils.remove(notes, otherCell.value)
+                            }
+                        }
+
+                        cell.notes = notes
+                    }
+                }
+            }
+            break
+        }
+        case 'su/play/setCellNotes': {
+            let {x,y} = action.meta, n = draft.boardSize, n2 = n*n
+            let cellIndex = x + y * n2
+            let cell = draft.cells[cellIndex]
+            cell.notes = action.payload
+            break
+        }
+
         case 'su/play/setCellValue': {
             let value = action.payload
             let {x,y} = action.meta, n = draft.boardSize, n2 = n*n
@@ -37,9 +80,10 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
                 let otherCell = draft.cells[xi + y * n2]
                 if(value == otherCell.value) {
                     cell.conflicts.push(xi + y * n2)
-                    cell.valid = false
+                    cell.valueType = 'Conflict'
                     otherCell.conflicts.push(cellIndex)
-                    otherCell.valid = false
+                    if(otherCell.valueType == 'Prefilled') otherCell.valueType = 'Conflict-Prefilled'
+                    else if(otherCell.valueType == 'Guess') otherCell.valueType = 'Conflict'
                 }
                 ArrayUtils.remove(otherCell.notes, value)
             }
@@ -47,23 +91,25 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
                 let otherCell = draft.cells[x + yi * n2]
                 if(value == otherCell.value) {
                     cell.conflicts.push(x + yi * n2)
-                    cell.valid = false
+                    cell.valueType = 'Conflict'
                     otherCell.conflicts.push(cellIndex)
-                    otherCell.valid = false
+                    if(otherCell.valueType == 'Prefilled') otherCell.valueType = 'Conflict-Prefilled'
+                    else if(otherCell.valueType == 'Guess') otherCell.valueType = 'Conflict'
                 }
                 ArrayUtils.remove(otherCell.notes, value)
             }
-            let sx = Math.floor(x/n), sy = Math.floor(y/n)
-            for(let yi = 0; yi < n; yi++) { // check each cell in sector except those in the same column or row
+            let hx = Math.floor(x/n), hy = Math.floor(y/n)
+            for(let yi = 0; yi < n; yi++) { // check each cell in house except those in the same column or row
                 for(let xi = 0; xi < n; xi++) {
-                    let tx = sx*n + xi
-                    let ty = sy*n + yi
-                    let otherCell = draft.cells[tx + yi * n2]
+                    let tx = hx*n + xi
+                    let ty = hy*n + yi
+                    let otherCell = draft.cells[tx + ty * n2]
                     if(value == otherCell.value && x != tx && y != ty) {
                         cell.conflicts.push(tx + ty * n2)
-                        cell.valid = false
+                        cell.valueType = 'Conflict'
                         otherCell.conflicts.push(cellIndex)
-                        otherCell.valid = false
+                        if(otherCell.valueType == 'Prefilled') otherCell.valueType = 'Conflict-Prefilled'
+                        else if(otherCell.valueType == 'Guess') otherCell.valueType = 'Conflict'
                     }
                     ArrayUtils.remove(otherCell.notes, value)
                 }
@@ -96,14 +142,15 @@ const clearCell = (draft: Draft<PlayState>, {x,y}: CellCoordinate) => {
     let cellState = draft.cells[index]
 
     cellState.value = 0
-    cellState.valid = true
+    cellState.valueType = 'None'
     cellState.notes = []
 
     for(let ci of cellState.conflicts) {
-        let conflictAnswer = draft.cells[ci]
-        if(!conflictAnswer.prefilled) {
-            ArrayUtils.remove(conflictAnswer.conflicts, index)
-            conflictAnswer.valid = conflictAnswer.conflicts.length > 0
+        let conflictCell = draft.cells[ci]
+        ArrayUtils.remove(conflictCell.conflicts, index)
+        if(conflictCell.conflicts.length == 0) {
+            if(conflictCell.valueType == 'Conflict') conflictCell.valueType = 'Guess'
+            else if(conflictCell.valueType == 'Conflict-Prefilled') conflictCell.valueType = 'Prefilled'
         }
     }
     cellState.conflicts = []

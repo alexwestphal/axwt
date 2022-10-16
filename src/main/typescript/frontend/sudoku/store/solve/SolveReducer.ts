@@ -1,6 +1,6 @@
 
 import {Reducer} from 'redux'
-import produce, {Draft} from 'immer'
+import produce, {castDraft, Draft} from 'immer'
 
 import * as SU from '../SU'
 
@@ -17,7 +17,7 @@ export const SolveReducer: Reducer<SolveState> = produce((draft: Draft<SolveStat
             clearResult(draft)
             break
         case 'su/solve/createSolution':
-            draft.result = action.payload
+            draft.result = castDraft(action.payload)
             break
         case 'su/solve/play':
             draft.playback = 'Play'

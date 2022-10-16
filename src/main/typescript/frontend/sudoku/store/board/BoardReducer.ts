@@ -1,11 +1,13 @@
 
 import {Reducer} from 'redux'
-import produce, {Draft} from 'immer'
+import produce, {castDraft, Draft} from 'immer'
 
 import * as SU from '../SU'
 
+import {Sudoku} from '../../data'
 
 import {BoardState} from './BoardState'
+
 
 export const BoardReducer: Reducer<BoardState> = produce((draft: Draft<BoardState>, action: SU.AnyAction) => {
     switch(action.type) {
@@ -13,20 +15,16 @@ export const BoardReducer: Reducer<BoardState> = produce((draft: Draft<BoardStat
             return action.payload.board
 
         case 'su/board/clearCellValue':
-            draft.cellValues[action.meta.x + action.meta.y * draft.boardSize * draft.boardSize] = 0
+            draft.current = castDraft(Sudoku.clearCell(draft.current, action.meta.x, action.meta.y, false))
             break
         case 'su/board/newBoard':
             draft.boardType = action.meta.boardType
             draft.boardSize = action.meta.boardSize
 
-            let cellData = Array(Math.pow(action.meta.boardSize, 4))
-            for(let i=0; i < cellData.length; i++) {
-                cellData[i] = 0
-            }
-            draft.cellValues = cellData
+            draft.current = castDraft(Sudoku.newBoard(action.meta.boardSize))
             break
         case 'su/board/setCellValue':
-            draft.cellValues[action.meta.x + action.meta.y * draft.boardSize * draft.boardSize] = action.payload
+            draft.current = castDraft(Sudoku.setCellValueKnown(draft.current, action.meta.x, action.meta.y, action.payload))
             break
     }
 }, BoardState.Default)

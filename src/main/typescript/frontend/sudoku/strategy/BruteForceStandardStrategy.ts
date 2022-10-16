@@ -1,66 +1,73 @@
 
-import {createSolvePath, SolveResult, SolveStep} from '../data'
+import {createSolvePath, SolveResult, SolveStep, Sudoku} from '../data'
 import {Strategy, StrategyConfig} from './Strategy'
 
 export class BruteForceStandardStrategy implements Strategy {
 
-    solve(n: number, cellData: number[], config: StrategyConfig): SolveResult {
+    solve(board: Sudoku.Board, config: StrategyConfig): SolveResult {
 
         let startTime = Date.now()
         let success = true
 
-        let current = Array.from(cellData)
-        let path = createSolvePath(config.direction, n)
-        let n2 = n*n, n4 = n2*n2
+        let known = board.cells.map(cell => cell.value > 0)
+        let values = board.cells.map(cell => cell.value)
+        let path = createSolvePath(config.direction, board.n)
+
+        console.log("Values: ", values)
 
         const checkCell = (x: number, y: number, guess: number): boolean => {
 
             // Check if row already contains value
-            for(let tx = 0; tx < n2; tx++) {
-                if(tx != x && current[tx+y*n2] == guess) return false
+            for(let tx = 0; tx < board.n2; tx++) {
+                if(tx != x && values[tx+y*board.n2] == guess) return false
             }
 
             // Check if column already contains value
-            for(let ty = 0; ty < n2; ty++) {
-                if(ty != y && current[x+ty*n2] == guess) return false
+            for(let ty = 0; ty < board.n2; ty++) {
+                if(ty != y && values[x+ty*board.n2] == guess) return false
             }
 
             // Check if house already contains value
-            let hx = Math.floor(x/n), hy = Math.floor(y/n)
-            for(let i = 0; i < n; i++) {
-                for(let j = 0; j < n; j++) {
-                    let tx = hx*n + j
-                    let ty = hy*n + i
-                    if(tx != x && ty != y && current[tx+ty*n2] == guess) return false
+            let hx = Math.floor(x/board.n), hy = Math.floor(y/board.n)
+            for(let i = 0; i < board.n; i++) {
+                for(let j = 0; j < board.n; j++) {
+                    let tx = hx*board.n + j
+                    let ty = hy*board.n + i
+                    if(tx != x && ty != y && values[tx+ty*board.n2] == guess) return false
                 }
             }
             return true
+        }
+        const checkCellLog = (x: number, y: number, guess: number): boolean => {
+            let result = checkCell(x, y, guess)
+            console.debug(`checkCell(${x}, ${y}, ${guess}: ${result})`)
+            return result
         }
 
         let steps: SolveStep[] = []
 
         let i = 0
-        while(i < n4) {
+        while(i < board.n4) {
             let j = path[i]
 
-            if(cellData[j] != 0) {
+            if(known[j]) {
                 // Prefilled value
                 i++; continue
             }
 
-            let x = j % n2, y = Math.floor(j / n2)
+            let x = j % board.n2, y = Math.floor(j / board.n2)
 
-            let guess = current[j] + 1
-            if(guess > n2) {
+            let guess = values[j] + 1
+            if(guess > board.n2) {
 
                 // Need to backtrack (past any prefilled values)
-                current[j] = 0
-                do { i--; j = path[i] } while(cellData[j] > 0)
+                values[j] = 0
+                do { i--; j = path[i] } while(known[j])
 
                 steps.push({ type: 'Delete', x, y, value: 0})
             } else {
-                current[j] = guess
-                if(checkCell(x, y, guess)) {
+                values[j] = guess
+                if(checkCellLog(x, y, guess)) {
                     // Possible value
                     steps.push({ type: 'Guess', x, y, value: guess })
 
@@ -76,9 +83,11 @@ export class BruteForceStandardStrategy implements Strategy {
             }
         }
 
+        let solution = Sudoku.withGuesses(board, values)
+
         let endTime = Date.now()
         let timeTaken = endTime - startTime
 
-        return { success, timeTaken, steps, stepCount: steps.length, solution: current }
+        return { success, timeTaken, steps, stepCount: steps.length, solution }
     }
 }

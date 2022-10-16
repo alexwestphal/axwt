@@ -4,8 +4,8 @@ import * as React from 'react'
 import {Button} from '@mui/material'
 import SaveIcon from '@mui/icons-material/Save'
 
-import {BoardUtils, CellCoordinate} from '../data'
-import {AppActions, BoardActions, selectBoardState, useThunkDispatch, useTypedSelector} from '../store'
+import {Sudoku} from '../data'
+import {AppActions, BoardActions, selectEditBoard, useThunkDispatch, useTypedSelector} from '../store'
 
 import SudokuBoard, {BoardCell, SudokuBoardProps} from './SudokuBoard'
 
@@ -16,19 +16,16 @@ import {mainPanelClasses} from './MainPanel'
 
 const EditMode: React.FC = () => {
 
-    const board = useTypedSelector(selectBoardState)
-    const n = board.boardSize, n2 = n * n, n4 = n2 * n2
+    const board = useTypedSelector(selectEditBoard)
 
     const dispatch = useThunkDispatch()
 
-    const [activeCellCoord, setActiveCellCoord] = React.useState<CellCoordinate | null>(null)
-
-    const cellCoords = BoardUtils.createCellCoordinateArray(n)
+    const [activeCellCoord, setActiveCellCoord] = React.useState<Sudoku.Coord | null>(null)
 
     const handleClick: SudokuBoardProps['onClick'] = (ev) => {
         setActiveCellCoord({
-            x: Math.floor(ev.boardX / (100/n2)),
-            y: Math.floor(ev.boardY / (100/n2))
+            x: Math.floor(ev.boardX / (100/board.n2)),
+            y: Math.floor(ev.boardY / (100/board.n2))
         })
     }
 
@@ -41,33 +38,35 @@ const EditMode: React.FC = () => {
             dispatch(BoardActions.setCellValue(x, y, parseInt(ev.key)))
         } else switch(ev.key) {
             case 'ArrowDown':
-                if(y < n2-1) setActiveCellCoord({x: x, y: y+1})
+                if(y < board.n2-1) setActiveCellCoord({x: x, y: y+1})
                 break
             case 'ArrowLeft':
                 if(x > 0) setActiveCellCoord({x: x-1, y: y})
                 break
             case 'ArrowRight':
-                if(x < n2-1) setActiveCellCoord({x: x+1, y: y})
+                if(x < board.n2-1) setActiveCellCoord({x: x+1, y: y})
                 break
             case 'ArrowUp':
                 if(y > 0) setActiveCellCoord({ x: x, y: y-1})
                 break
-            case 'Backspace':
-                if(board.cellValues[x+y*n2] > 0) {
+            case 'Backspace': {
+                let activeCell = Sudoku.getCell(board, x, y)
+                if(activeCell.value > 0) {
                     dispatch(BoardActions.clearCellValue(x, y))
                 }
                 break
+            }
         }
     }
 
     return <>
         <SudokuBoard n={3} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown}>
-            {cellCoords.map((cell, index) =>
+            {board.cells.map(cell =>
                 <BoardCell
                     key={`cell-${cell.x}-${cell.y}`}
-                    n={n} x={cell.x} y={cell.y}
-                    value={board.cellValues[index]}
-                    highlight={activeCellCoord != null && BoardUtils.isSameCell(cell, activeCellCoord) ? 'active' : 'none'}
+                    n={board.n} x={cell.x} y={cell.y}
+                    value={cell.value}
+                    highlight={activeCellCoord != null && Sudoku.isSameCell(board, cell, activeCellCoord) ? 'active' : 'none'}
                 />
             )}
         </SudokuBoard>

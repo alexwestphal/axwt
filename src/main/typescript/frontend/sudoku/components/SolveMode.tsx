@@ -1,32 +1,25 @@
 
 import * as React from 'react'
 
-import {ArrayUtils, useInterval} from '@axwt/util'
-
-import {selectBoardState, selectSolveResult, selectSolveState, useTypedSelector} from '../store'
-
-import SudokuBoard, {BoardCell, BoardCellProps} from './SudokuBoard'
 import {Box} from '@mui/material'
 
-type CellData = [number, BoardCellProps['valueType']]
+import {useInterval} from '@axwt/util'
+
+import {Sudoku} from '../data'
+import {selectEditBoard, selectSolveResult, selectSolveState, useTypedSelector} from '../store'
+
+import SudokuBoard, {BoardCell} from './SudokuBoard'
+
 
 const SolveMode: React.FC = () => {
 
-    const board = useTypedSelector(selectBoardState)
+    const initBoard = useTypedSelector(selectEditBoard)
     const solveState = useTypedSelector(selectSolveState)
     const result = useTypedSelector(selectSolveResult)
 
-    const n = board.boardSize, n2 = n * n, n4 = n2 * n2
 
     const [stepIndex, setStepIndex] = React.useState<number>(0)
-    const [boardState, setBoardState] = React.useState<CellData[]>(board.cellValues.map(v => [v, 'Known']))
-
-    const setCellState = (x: number, y: number, cell: CellData) => {
-        let index = x + y * n2
-        let left = boardState.slice(0, index), right = boardState.slice(index+1)
-        let result = [...left, cell, ...right]
-        setBoardState(result)
-    }
+    const [currentBoard, setCurrentBoard] = React.useState<Sudoku.Board>(initBoard)
 
     useInterval(() => {
         switch(solveState.playback) {
@@ -36,15 +29,15 @@ const SolveMode: React.FC = () => {
                     let step = result.steps[stepIndex]
                     switch(step.type) {
                         case 'Wrong':
-                            setCellState(step.x, step.y, [step.value, 'User-Conflict'])
+                            setCurrentBoard(Sudoku.setCellValueGuess(currentBoard, step.x, step.y, step.value, false))
                             break
                         case 'Guess':
-                            setCellState(step.x, step.y, [step.value, 'Guess'])
+                            setCurrentBoard(Sudoku.setCellValueGuess(currentBoard, step.x, step.y, step.value, false))
                             break
                         case 'Correct':
                             break
                         case 'Delete':
-                            setCellState(step.x, step.y, [step.value, 'None'])
+                            setCurrentBoard(Sudoku.clearCell(currentBoard, step.x, step.y, false))
                             break
                     }
                     setStepIndex(stepIndex+1)
@@ -56,30 +49,24 @@ const SolveMode: React.FC = () => {
             case 'Reset':
                 if(stepIndex > 0) {
                     setStepIndex(0)
-                    setBoardState(board.cellValues.map(v => [v, 'Known']))
+                    setCurrentBoard(initBoard)
                 }
                 break
         }
     }, 1000 / solveState.playbackSpeed)
 
-    const cells = ArrayUtils.range(0, n4).map(i => [i%n2, Math.floor(i/n2)])
 
-    const displayedState: CellData[] = solveState.playback == 'Show'
-        ? ArrayUtils.range(0, n4).map(i =>
-            board.cellValues[i] > 0 ? [board.cellValues[i], 'Known'] : [result.solution[i], 'None']
-        )
-        : boardState
+    const displayedBoard = solveState.playback == 'Show' ? result.solution : currentBoard
 
     return <>
-        <SudokuBoard n={n}>
-            {cells.map(([x,y]) => {
-                let index = x + y * n2
+        <SudokuBoard n={displayedBoard.n}>
+            {displayedBoard.cells.map(cell => {
                 return <BoardCell
-                    key={`cell-${x}-${y}`}
-                    n={n} x={x} y={y}
-                    value={displayedState[index][0]}
+                    key={`cell-${cell.x}-${cell.y}`}
+                    n={currentBoard.n} x={cell.x} y={cell.y}
+                    value={cell.value}
+                    valueType={cell.valueType}
                     highlight="none"
-                    valueType={displayedState[index][0] > 0 ? displayedState[index][1] : null}
                 />
             })}
         </SudokuBoard>

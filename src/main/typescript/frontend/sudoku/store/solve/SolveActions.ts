@@ -2,14 +2,12 @@
 import {Action, createAction} from '@axwt/core'
 
 import {SolveDirection, SolveResult, SolveStrategy} from '../../data'
+import {BruteForceStandardStrategy, StrategyConfig} from '../../strategy'
 
-
-import {BruteForceStandardStrategy} from '../../strategy/BruteForceStandardStrategy'
-import {selectBoardState} from '../board'
+import {selectEditBoard} from '../board'
 import * as SU from '../SU'
 
 import {selectSolveState} from './SolveSelectors'
-import {StrategyConfig} from '@axwt/sudoku/strategy/Strategy'
 
 export namespace SolveActions {
 
@@ -40,7 +38,7 @@ export namespace SolveActions {
     export const createSolution = (): SU.ThunkAction =>
         (dispatch, getState) => {
             let state = getState()
-            let board = selectBoardState(state)
+            let board = selectEditBoard(state)
             let solveState = selectSolveState(state)
 
             let strategy = new BruteForceStandardStrategy()
@@ -48,7 +46,7 @@ export namespace SolveActions {
                 stepLimit: solveState.stepLimit,
                 direction: solveState.solveDirection
             }
-            let result = strategy.solve(board.boardSize, board.cellValues, config)
+            let result = strategy.solve(board, config)
 
             dispatch(createAction('su/solve/createSolution', result))
         }

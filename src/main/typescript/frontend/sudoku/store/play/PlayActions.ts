@@ -1,9 +1,9 @@
 
 import {Action, createAction} from '@axwt/core'
 
-import {BoardSize} from '../../data'
+import {Sudoku} from '../../data'
 
-import {selectBoardState} from '../board'
+import {selectEditBoard} from '../board'
 import * as SU from '../SU'
 
 import {PlayEntryMode} from './PlayState'
@@ -24,7 +24,7 @@ export namespace PlayActions {
 
     export type SetEntryMode = Action<'su/play/setEntryMode', PlayEntryMode>
 
-    export type StartGame = Action<'su/play/start', number[], { boardSize: BoardSize }>
+    export type StartGame = Action<'su/play/start', Sudoku.Board>
 
     export type ToggleNote = Action<'su/play/toggleNote', number, { x: number, y: number }>
 
@@ -49,8 +49,8 @@ export namespace PlayActions {
 
     export const startGame = (): SU.ThunkAction =>
         (dispatch, getState) => {
-            let board = selectBoardState(getState())
-            dispatch(createAction('su/play/start', board.cellValues, { boardSize: board.boardSize }))
+            let board = selectEditBoard(getState())
+            dispatch(createAction('su/play/start', board))
         }
 
     export const toggleNote = (x: number, y: number, note: number): ToggleNote =>

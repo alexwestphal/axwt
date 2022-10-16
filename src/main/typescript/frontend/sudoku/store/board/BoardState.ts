@@ -1,12 +1,12 @@
 
 
-import {BoardSize, BoardType} from '../../data'
+import {BoardSize, BoardType, Sudoku} from '../../data'
 
 export interface BoardState {
     boardType: BoardType
     boardSize: BoardSize
 
-    cellValues: number[]
+    current: Sudoku.Board
 }
 
 export namespace BoardState {
@@ -14,7 +14,7 @@ export namespace BoardState {
         boardType: 'Standard',
         boardSize: 3,
 
-        cellValues: Array(81)
+        current: Sudoku.newBoard(3)
 
     }
 }

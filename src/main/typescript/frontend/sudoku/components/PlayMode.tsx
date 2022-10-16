@@ -13,10 +13,10 @@ import EditOffIcon from '@mui/icons-material/EditOff'
 import {createClasses} from '@axwt/util'
 
 
-import {BoardUtils, CellCoordinate, Sudoku} from '../data'
+import {Sudoku} from '../data'
 import {
     PlayActions,
-    selectBoardState, selectCurrentBoard, selectEntryMode, selectGameStage,
+    selectCurrentPlayBoard, selectEntryMode, selectGameStage,
     useThunkDispatch,
     useTypedSelector
 } from '../store'
@@ -30,23 +30,18 @@ const playModeClasses = createClasses('PlayMode', ['overlay'])
 
 const PlayMode: React.FC = () => {
 
-    const board = useTypedSelector(selectBoardState)
-    const current = useTypedSelector(selectCurrentBoard)
+    const board = useTypedSelector(selectCurrentPlayBoard)
     const entryMode = useTypedSelector(selectEntryMode)
     const gameStage = useTypedSelector(selectGameStage)
 
     const dispatch = useThunkDispatch()
 
-    const n = board.boardSize, n2 = n * n, n4 = n2 * n2
-
-    const [activeCellCoord, setActiveCellCoord] = React.useState<CellCoordinate | null>(null)
-
-    const cellCoords = BoardUtils.createCellCoordinateArray(n)
+    const [activeCellCoord, setActiveCellCoord] = React.useState<Sudoku.Coord | null>(null)
 
     const handleClick: SudokuBoardProps['onClick'] = (ev) => {
         setActiveCellCoord({
-            x: Math.floor(ev.boardX / (100/n2)),
-            y: Math.floor(ev.boardY / (100/n2))
+            x: Math.floor(ev.boardX / (100/board.n2)),
+            y: Math.floor(ev.boardY / (100/board.n2))
         })
     }
 
@@ -55,8 +50,10 @@ const PlayMode: React.FC = () => {
     const handleKeyDown: React.KeyboardEventHandler = (ev) => {
         if(activeCellCoord == null) return
         let {x,y} = activeCellCoord
-        let isPredefinedCell = board.cellValues[x + y * n2] > 0
-        if('1' <= ev.key && ev.key <= '9' && !isPredefinedCell) {
+        let activeCell = Sudoku.getCell(board, x, y)
+        let isKnownCell = activeCell.valueType == 'Known' || activeCell.valueType == 'Known-Conflict'
+
+        if('1' <= ev.key && ev.key <= '9' && !isKnownCell) {
             let value = parseInt(ev.key)
             if(entryMode == 'Normal') {
                 dispatch(PlayActions.setCellValue(x, y, value))
@@ -65,22 +62,23 @@ const PlayMode: React.FC = () => {
             }
         } else switch(ev.key) {
             case 'ArrowDown':
-                if(y < n2-1) setActiveCellCoord({x: x, y: y+1})
+                if(y < board.n2-1) setActiveCellCoord({x: x, y: y+1})
                 break
             case 'ArrowLeft':
                 if(x > 0) setActiveCellCoord({x: x-1, y: y})
                 break
             case 'ArrowRight':
-                if(x < n2-1) setActiveCellCoord({x: x+1, y: y})
+                if(x < board.n2-1) setActiveCellCoord({x: x+1, y: y})
                 break
             case 'ArrowUp':
                 if(y > 0) setActiveCellCoord({ x: x, y: y-1})
                 break
-            case 'Backspace':
-                if(!isPredefinedCell) {
+            case 'Backspace': {
+                if(!isKnownCell) {
                     dispatch(PlayActions.clearCell(x, y))
                 }
                 break
+            }
         }
     }
 
@@ -100,12 +98,12 @@ const PlayMode: React.FC = () => {
         },
     }}>
         { gameStage == 'Init' && <>
-            <SudokuBoard n={n}>
-                {cellCoords.map((cell, index) =>
+            <SudokuBoard n={board.n}>
+                {board.cells.map(cell =>
                     <BoardCell
                         key={`cell=${cell.x}-${cell.y}`}
-                        n={n} x={cell.x} y={cell.y}
-                        value={board.cellValues[index]}
+                        n={board.n} x={cell.x} y={cell.y}
+                        value={cell.value}
                         highlight="none"
                     />
                 )}
@@ -118,17 +116,17 @@ const PlayMode: React.FC = () => {
             </div>
         </> }
         { gameStage == 'Play' && <>
-            <SudokuBoard n={n} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown}>
-                {current.cells.map(cell => {
+            <SudokuBoard n={board.n} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown}>
+                {board.cells.map(cell => {
 
                     let highlight: BoardCellProps['highlight'] = 'none'
                     if(activeCellCoord != null) {
-                        let activeCell = Sudoku.getCell(current, activeCellCoord.x, activeCellCoord.y)
-                        if(Sudoku.isSameCell(current, cell, activeCellCoord)) highlight = 'active'
+                        let activeCell = Sudoku.getCell(board, activeCellCoord.x, activeCellCoord.y)
+                        if(Sudoku.isSameCell(board, cell, activeCellCoord)) highlight = 'active'
                         else if(
-                            Sudoku.isSameColumn(current, cell, activeCell) ||
-                            Sudoku.isSameRow(current, cell, activeCell) ||
-                            Sudoku.isSameHouse(current, cell, activeCell)
+                            Sudoku.isSameColumn(board, cell, activeCell) ||
+                            Sudoku.isSameRow(board, cell, activeCell) ||
+                            Sudoku.isSameHouse(board, cell, activeCell)
                         ) highlight = 'indicate'
                         else if(cell.value > 0 && cell.value == activeCell.value)
                             highlight = 'match'
@@ -136,7 +134,7 @@ const PlayMode: React.FC = () => {
 
                     return <BoardCell
                         key={`cell=${cell.x}-${cell.y}`}
-                        n={n} x={cell.x} y={cell.y}
+                        n={board.n} x={cell.x} y={cell.y}
                         value={cell.value}
                         valueType={cell.valueType}
                         highlight={highlight}

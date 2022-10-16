@@ -1,5 +1,7 @@
 import {ArrayUtils} from '@axwt/util'
 
+import {Sudoku} from '../data/Sudoku'
+
 export type SolveStrategy = 'brute-force'
 
 
@@ -15,7 +17,7 @@ export interface SolveResult {
     success: boolean
     timeTaken: number
     stepCount: number
-    solution: number[]
+    solution: Sudoku.Board
     steps: SolveStep[]
 }
 

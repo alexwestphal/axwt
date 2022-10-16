@@ -1,4 +1,5 @@
 import {ArrayUtils} from '@axwt/util'
+import SudokuBoard from '@axwt/sudoku/components/SudokuBoard'
 
 
 export namespace Sudoku {
@@ -15,7 +16,7 @@ export namespace Sudoku {
         readonly y: number
     }
 
-    export type CellValueType = 'None' | 'Known' | 'Known-Conflict' | 'User' | 'User-Conflict' | 'Guess'
+    export type CellValueType = 'None' | 'Known' | 'Known-Conflict' | 'User' | 'User-Conflict' | 'Guess' | 'Guess-Conflict'
 
     export interface Cell extends Coord {
         readonly index: number
@@ -233,8 +234,8 @@ export namespace Sudoku {
 
 
 
-    export const setCellValueGuess = (board: Sudoku.Board, x: number, y: number, value: number): Sudoku.Board =>
-        updateCell(board, x, y, (cell) => ({ value, valueType: 'Guess' }))
+    export const setCellValueGuess = (board: Sudoku.Board, x: number, y: number, value: number, valid: boolean = true): Sudoku.Board =>
+        updateCell(board, x, y, (cell) => ({ value, valueType: valid ? 'Guess' : 'Guess-Conflict' }))
 
     export const setCellValueKnown = (board: Sudoku.Board, x: number, y: number, value: number): Sudoku.Board =>
         updateCell(board, x, y, (cell) => ({ value, valueType: 'Known' }))
@@ -258,6 +259,15 @@ export namespace Sudoku {
 
         let cells = [...board.cells]
         mutate(cells)
+
+        return { ...board, cells }
+    }
+
+    export const withGuesses = (board: Sudoku.Board, guesses: number[]): Sudoku.Board => {
+
+        let cells: ReadonlyArray<Sudoku.Cell> = board.cells.map((cell, cellIndex) =>
+            cell.valueType == 'Known' ? cell : { ...cell, value: guesses[cellIndex], valueType: 'Guess' }
+        )
 
         return { ...board, cells }
     }

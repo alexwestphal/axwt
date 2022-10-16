@@ -33,7 +33,7 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
             draft.entryMode = action.payload
             break
         case 'su/play/start':
-            draft.current = castDraft(Sudoku.fromValues(action.meta.boardSize, action.payload))
+            draft.current = castDraft(action.payload)
             draft.gameStage = 'Play'
             break
         case 'su/play/toggleNote': {

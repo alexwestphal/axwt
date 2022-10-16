@@ -13,11 +13,10 @@ import EditOffIcon from '@mui/icons-material/EditOff'
 import {createClasses} from '@axwt/util'
 
 
-import {BoardUtils, CellCoordinate} from '../data'
+import {BoardUtils, CellCoordinate, Sudoku} from '../data'
 import {
     PlayActions,
-    selectBoardState,
-    selectPlayState,
+    selectBoardState, selectCurrentBoard, selectEntryMode, selectGameStage,
     useThunkDispatch,
     useTypedSelector
 } from '../store'
@@ -32,7 +31,10 @@ const playModeClasses = createClasses('PlayMode', ['overlay'])
 const PlayMode: React.FC = () => {
 
     const board = useTypedSelector(selectBoardState)
-    const playState = useTypedSelector(selectPlayState)
+    const current = useTypedSelector(selectCurrentBoard)
+    const entryMode = useTypedSelector(selectEntryMode)
+    const gameStage = useTypedSelector(selectGameStage)
+
     const dispatch = useThunkDispatch()
 
     const n = board.boardSize, n2 = n * n, n4 = n2 * n2
@@ -56,9 +58,9 @@ const PlayMode: React.FC = () => {
         let isPredefinedCell = board.cellValues[x + y * n2] > 0
         if('1' <= ev.key && ev.key <= '9' && !isPredefinedCell) {
             let value = parseInt(ev.key)
-            if(playState.entryMode == 'Normal') {
+            if(entryMode == 'Normal') {
                 dispatch(PlayActions.setCellValue(x, y, value))
-            } else if(playState.entryMode == 'Note') {
+            } else if(entryMode == 'Note') {
                 dispatch(PlayActions.toggleNote(x, y, value))
             }
         } else switch(ev.key) {
@@ -97,7 +99,7 @@ const PlayMode: React.FC = () => {
             alignItems: 'center',
         },
     }}>
-        { playState.gameStage == 'Init' && <>
+        { gameStage == 'Init' && <>
             <SudokuBoard n={n}>
                 {cellCoords.map((cell, index) =>
                     <BoardCell
@@ -115,28 +117,26 @@ const PlayMode: React.FC = () => {
                 >Start Game</Button>
             </div>
         </> }
-        { playState.gameStage == 'Play' && <>
+        { gameStage == 'Play' && <>
             <SudokuBoard n={n} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown}>
-                {cellCoords.map((cellCoord, index) => {
-                    let {x,y} = cellCoord
-                    let cell = playState.cells[index]
+                {current.cells.map(cell => {
 
                     let highlight: BoardCellProps['highlight'] = 'none'
                     if(activeCellCoord != null) {
-                        let activeCell = playState.cells[activeCellCoord.x + activeCellCoord.y * n2]
-                        if(BoardUtils.isSameCell(cellCoord, activeCellCoord)) highlight = 'active'
+                        let activeCell = Sudoku.getCell(current, activeCellCoord.x, activeCellCoord.y)
+                        if(Sudoku.isSameCell(current, cell, activeCellCoord)) highlight = 'active'
                         else if(
-                            BoardUtils.isSameColumn(cellCoord, activeCellCoord) ||
-                            BoardUtils.isSameRow(cellCoord, activeCellCoord) ||
-                            BoardUtils.isSameHouse(cellCoord, activeCellCoord, n)
+                            Sudoku.isSameColumn(current, cell, activeCell) ||
+                            Sudoku.isSameRow(current, cell, activeCell) ||
+                            Sudoku.isSameHouse(current, cell, activeCell)
                         ) highlight = 'indicate'
                         else if(cell.value > 0 && cell.value == activeCell.value)
                             highlight = 'match'
                     }
 
                     return <BoardCell
-                        key={`cell=${x}-${y}`}
-                        n={n} x={x} y={y}
+                        key={`cell=${cell.x}-${cell.y}`}
+                        n={n} x={cell.x} y={cell.y}
                         value={cell.value}
                         valueType={cell.valueType}
                         highlight={highlight}
@@ -145,7 +145,7 @@ const PlayMode: React.FC = () => {
                 })}
             </SudokuBoard>
         </>}
-        { playState.gameStage == 'Done' && <>
+        { gameStage == 'Done' && <>
 
         </>}
     </Box>
@@ -157,12 +157,13 @@ export default PlayMode
 
 export const PlayModeControls: React.FC = () => {
 
-    const playState = useTypedSelector(selectPlayState)
+    const entryMode = useTypedSelector(selectEntryMode)
+    const gameStage = useTypedSelector(selectGameStage)
     const dispatch = useThunkDispatch()
 
-    let notesMode = playState.entryMode == 'Note'
+    let notesMode = entryMode == 'Note'
 
-    return playState.gameStage == 'Play' && <>
+    return gameStage == 'Play' && <>
         <ButtonGroup>
             <Tooltip title="Compute Notes">
                 <IconButton onClick={() => dispatch(PlayActions.generateNotes())}>

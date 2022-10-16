@@ -4,9 +4,9 @@ import * as React from 'react'
 import {Box} from '@mui/material'
 
 import {ArrayUtils, cls, createClasses} from '@axwt/util'
-import {blue, blueGrey, green, red} from '@mui/material/colors'
+import {blue, blueGrey, orange, red} from '@mui/material/colors'
 
-import { CellValueType } from '../data'
+import {Sudoku} from '../data'
 
 
 export interface SudokuBoardProps {
@@ -18,7 +18,7 @@ export interface SudokuBoardProps {
 
 export const sudokuBoardClasses = createClasses("SudokuBoard", [
     "cell", "cellBackground", "cellNote", "cellHighlight_active", "cellHighlight_match", "cellHighlight_indicate",
-    "cellValue", "cellValue_conflict", "cellValue_guess", "cellValue_prefilled",
+    "cellValue", "cellValue_conflict", "cellValue_guess", "cellValue_known", "cellValue_user",
     "gridBorder", "gridLineMajor", "gridLineMinor"
 ])
 
@@ -86,10 +86,13 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({children, n, onClick, o
                     fill: red[500],
                 },
                 [`& .${classes.cellValue_guess}`]: {
-                    fill: blue[500],
+                    fill: orange[500],
                 },
-                [`& .${classes.cellValue_prefilled}`]: {
+                [`& .${classes.cellValue_known}`]: {
 
+                },
+                [`& .${classes.cellValue_user}`]: {
+                    fill: blue[500],
                 },
 
                 [`& .${classes.gridBorder}`]: {
@@ -162,9 +165,9 @@ export interface BoardCellProps {
     x: number
     y: number
     value: number
-    valueType?: CellValueType
+    valueType?: Sudoku.CellValueType
     highlight: 'none' | 'active' | 'indicate' | 'match'
-    notes?: number[]
+    notes?: ReadonlyArray<number>
 }
 
 export const BoardCell: React.FC<BoardCellProps> = ({n, x, y, value, valueType, highlight, notes = []}) => {
@@ -183,9 +186,10 @@ export const BoardCell: React.FC<BoardCellProps> = ({n, x, y, value, valueType, 
         />
         {value > 0 && <text
             className={cls(classes.cellValue, {
-                [classes.cellValue_prefilled]: valueType == 'Prefilled',
+                [classes.cellValue_known]: valueType == 'Known',
                 [classes.cellValue_guess]: valueType == 'Guess',
-                [classes.cellValue_conflict]: valueType == 'Conflict' || valueType == 'Conflict-Prefilled',
+                [classes.cellValue_user]: valueType == 'User',
+                [classes.cellValue_conflict]: valueType == 'Known-Conflict' || valueType == 'User-Conflict',
             })} fontSize={w*.75}
             x={(x+.5)*w} y={(y+.5)*w}
         >{value}</text>}
@@ -197,7 +201,7 @@ interface CellNotesProps {
     n: number
     x: number
     y: number
-    notes: number[]
+    notes: ReadonlyArray<number>
 }
 
 export const CellNotes: React.FC<CellNotesProps> = ({n, x, y, notes}) => {

@@ -19,7 +19,7 @@ const SolveMode: React.FC = () => {
     const n = board.boardSize, n2 = n * n, n4 = n2 * n2
 
     const [stepIndex, setStepIndex] = React.useState<number>(0)
-    const [boardState, setBoardState] = React.useState<CellData[]>(board.cellValues.map(v => [v, 'Prefilled']))
+    const [boardState, setBoardState] = React.useState<CellData[]>(board.cellValues.map(v => [v, 'Known']))
 
     const setCellState = (x: number, y: number, cell: CellData) => {
         let index = x + y * n2
@@ -36,7 +36,7 @@ const SolveMode: React.FC = () => {
                     let step = result.steps[stepIndex]
                     switch(step.type) {
                         case 'Wrong':
-                            setCellState(step.x, step.y, [step.value, 'Conflict'])
+                            setCellState(step.x, step.y, [step.value, 'User-Conflict'])
                             break
                         case 'Guess':
                             setCellState(step.x, step.y, [step.value, 'Guess'])
@@ -56,7 +56,7 @@ const SolveMode: React.FC = () => {
             case 'Reset':
                 if(stepIndex > 0) {
                     setStepIndex(0)
-                    setBoardState(board.cellValues.map(v => [v, 'Prefilled']))
+                    setBoardState(board.cellValues.map(v => [v, 'Known']))
                 }
                 break
         }
@@ -66,7 +66,7 @@ const SolveMode: React.FC = () => {
 
     const displayedState: CellData[] = solveState.playback == 'Show'
         ? ArrayUtils.range(0, n4).map(i =>
-            board.cellValues[i] > 0 ? [board.cellValues[i], 'Prefilled'] : [result.solution[i], 'None']
+            board.cellValues[i] > 0 ? [board.cellValues[i], 'Known'] : [result.solution[i], 'None']
         )
         : boardState
 

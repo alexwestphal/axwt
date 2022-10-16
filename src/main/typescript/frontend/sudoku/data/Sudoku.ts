@@ -7,21 +7,26 @@ export namespace Sudoku {
         readonly n: number
         readonly n2: number
         readonly n4: number
-        readonly cells: ReadonlyArray<Sudoku.Cell>
+        readonly cells: ReadonlyArray<Cell>
+    }
+
+    export interface Coord {
+        readonly x: number
+        readonly y: number
     }
 
     export type CellValueType = 'None' | 'Known' | 'Known-Conflict' | 'User' | 'User-Conflict' | 'Guess'
 
-    export interface Cell {
+    export interface Cell extends Coord {
         readonly index: number
-        readonly x: number
-        readonly y: number
 
         readonly value: number
         readonly valueType: CellValueType
         readonly notes: ReadonlyArray<number>
         readonly conflicts: ReadonlyArray<number>
     }
+
+
 
 
     // Board Creation
@@ -55,6 +60,17 @@ export namespace Sudoku {
             }
         })
     }
+
+    // Coordinate utilities
+
+    export const isSameCell = (board: Sudoku.Board, a: Coord, b: Coord): boolean => a.x == b.x && a.y == b.y
+
+    export const isSameColumn = (board: Sudoku.Board, a: Coord, b: Coord): boolean => a.x == b.x
+
+    export const isSameRow = (board: Sudoku.Board, a: Coord, b: Coord): boolean => a.y == b.y
+
+    export const isSameHouse = (board: Sudoku.Board, a: Coord, b: Coord): boolean =>
+        Math.floor(a.x/board.n) == Math.floor(b.x/board.n) && Math.floor(a.y/board.n) == Math.floor(b.y/board.n)
 
 
     // Board Manipulation
@@ -123,7 +139,7 @@ export namespace Sudoku {
         return true
     }
 
-    export const clearCell = (board: Sudoku.Board, x: number, y: number, checkConflicts: boolean): Sudoku.Board => {
+    export const clearCell = (board: Sudoku.Board, x: number, y: number, checkConflicts: boolean = true): Sudoku.Board => {
         if(checkConflicts) {
             return updateCells(board, cells => {
                 let cellIndex = x + y * board.n2
@@ -202,7 +218,7 @@ export namespace Sudoku {
                         notes: otherCell.notes.filter(i => i != cellIndex)
                     }
                 } else if(otherCell.notes.length > 0) {
-                    cells[otherCell.index] = { ...otherCell, notes: otherCell.notes.filter(i => i != cellIndex) }
+                    cells[otherCell.index] = { ...otherCell, notes: otherCell.notes.filter(n => n != value) }
                 }
             }
 
@@ -228,7 +244,7 @@ export namespace Sudoku {
 
     export const toggleCellNote = (board: Sudoku.Board, x: number, y: number, note: number): Sudoku.Board =>
         updateCell(board, x, y, (cell) => ({
-            notes: cell.notes.includes(note) ? [...cell.notes, note] : cell.notes.filter(n => n != note)
+            notes: cell.notes.includes(note) ? cell.notes.filter(n => n != note) : [...cell.notes, note]
         }))
 
     const updateCell = (board: Sudoku.Board, x: number, y: number, update: (cell: Cell) => Partial<Cell>): Sudoku.Board =>

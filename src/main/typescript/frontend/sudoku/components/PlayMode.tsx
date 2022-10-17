@@ -119,10 +119,11 @@ const PlayMode: React.FC = () => {
             </div>
         </> }
         { playState.gameStage == 'Play' && <>
-            <SudokuBoard n={board.n} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown} highlightSpace={playState.searchResult?.targetSpace}>
+            <SudokuBoard n={board.n} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown} houseHighlight={playState.searchResult?.targetHouse}>
                 {board.cells.map(cell => {
 
                     let highlightedCandidates = playState.searchResult?.candidateHighlights.find(c => c.x == cell.x && c.y == cell.y)?.candidates
+                    let clearedCandidates = playState.searchResult?.candidateClearances.find(c => c.x == cell.x && c.y == cell.y)?.toClear
 
                     let highlight: BoardCellProps['highlight'] = 'none'
                     if(activeCellCoord != null) {
@@ -149,6 +150,7 @@ const PlayMode: React.FC = () => {
                         highlight={highlight}
                         candidates={cell.candidates}
                         highlightedCandidates={highlightedCandidates}
+                        clearedCandidates={clearedCandidates}
                     />
                 })}
             </SudokuBoard>

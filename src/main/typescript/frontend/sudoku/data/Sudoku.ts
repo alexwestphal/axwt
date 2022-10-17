@@ -80,6 +80,8 @@ export namespace Sudoku {
 
     // Data utilities
 
+    export const availableCandidates = (board: Sudoku.Board): number[] => ArrayUtils.range(1, board.n2+1)
+
     export const isSameCell = (board: Sudoku.Board, a: Coord, b: Coord): boolean => a.x == b.x && a.y == b.y
 
     export const isSameColumn = (board: Sudoku.Board, a: Coord, b: Coord): boolean => a.x == b.x
@@ -191,6 +193,9 @@ export namespace Sudoku {
             }
         })
     }
+
+    export const getAllHouses = (board: Sudoku.Board): (Sudoku.House & { cells: ReadonlyArray<Sudoku.Cell> })[] =>
+        [...getBlocks(board), ...getColumns(board), ...getRows(board)]
 
     export const getBlock = (board: Sudoku.Board, hx: number, hy: number): ReadonlyArray<Sudoku.Cell> => {
         let house = new Array<Sudoku.Cell>(board.n2)

@@ -21,7 +21,7 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
             }
             for(let {x,y,toClear} of action.payload.candidateClearances) {
                 let candidates = Sudoku.getCell(board, x, y).candidates
-                candidates.filter(c => !toClear.includes(c))
+                candidates = candidates.filter(c => !toClear.includes(c))
                 board = Sudoku.setCellCandidates(board, x, y, candidates)
             }
 

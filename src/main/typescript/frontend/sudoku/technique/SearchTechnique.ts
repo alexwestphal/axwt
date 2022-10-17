@@ -10,7 +10,7 @@ export interface SearchTechnique {
 
 export interface SearchResult {
     readonly key: TechniqueKey
-    readonly targetSpace?: Sudoku.House
+    readonly targetHouse?: Sudoku.House
     readonly candidateHighlights: ReadonlyArray<CandidateHighlight>
     readonly foundValues: ReadonlyArray<FoundValue>
     readonly candidateClearances: ReadonlyArray<CandidateClearances>

@@ -71,6 +71,17 @@ export namespace ArrayUtils {
         return result
     }
 
+    export const equals = <T>(xs: ReadonlyArray<T>, ys: ReadonlyArray<T>): boolean => {
+        if(xs == null || ys == null || xs.length != ys.length) return false
+        if(xs == ys) return true
+
+        for(let i=0; i<xs.length; i++) {
+            if(xs[i] != ys[i]) return false
+        }
+
+        return true
+    }
+
     export const filterAndMap = <T, R>(
         array: Array<T>,
         predicate: (item: T, index: number, array: Array<T>) => boolean,

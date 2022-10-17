@@ -6,7 +6,7 @@
 
     <groupId>nz.alexwestphal</groupId>
     <artifactId>axwt</artifactId>
-    <version>0.7</version>
+    <version>0.8</version>
     <packaging>war</packaging>
 
     <properties>

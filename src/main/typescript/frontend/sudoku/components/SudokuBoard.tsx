@@ -14,17 +14,17 @@ export interface SudokuBoardProps {
     onKeyDown?: React.KeyboardEventHandler
     onClick?: (ev: React.MouseEvent & { boardX: number, boardY: number }) => void
     onBlur?: React.FocusEventHandler
-    highlightSpace?: Sudoku.House
+    houseHighlight?: Sudoku.House
 }
 
 export const sudokuBoardClasses = createClasses("SudokuBoard", [
-    "cell", "cellBackground", "cellCandidate", "cellCandidate_highlight",
+    "cell", "cellBackground", "cellCandidate", "cellCandidate_clear", "cellCandidate_highlight",
     "cellHighlight_active", "cellHighlight_match", "cellHighlight_indicate",
     "cellValue", "cellValue_conflict", "cellValue_guess", "cellValue_known", "cellValue_user",
     "gridBorder", "gridLineMajor", "gridLineMinor", "house_highlight"
 ])
 
-export const SudokuBoard: React.FC<SudokuBoardProps> = ({children, n, onClick, onBlur, onKeyDown, highlightSpace}) => {
+export const SudokuBoard: React.FC<SudokuBoardProps> = ({children, n, onClick, onBlur, onKeyDown, houseHighlight}) => {
 
     const handleClick: React.MouseEventHandler<SVGElement> = (ev) => {
         if(onClick) {
@@ -70,6 +70,11 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({children, n, onClick, o
                     fill: blueGrey[500],
                     alignmentBaseline: 'central',
                     textAnchor: 'middle',
+                },
+                [`& .${classes.cellCandidate_clear}`]: {
+                    fill: 'transparent',
+                    stroke: red[300],
+                    strokeWidth: 0.25,
                 },
                 [`& .${classes.cellCandidate_highlight}`]: {
                     fill: 'transparent',
@@ -124,7 +129,7 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({children, n, onClick, o
         >
             <BoardGrid n={n}/>
             {children}
-            {highlightSpace && <HighlightHouse n={n} house={highlightSpace}/>}
+            {houseHighlight && <HighlightHouse n={n} house={houseHighlight}/>}
         </Box>
     </svg>
 }
@@ -182,9 +187,10 @@ export interface BoardCellProps {
     highlight: 'none' | 'active' | 'indicate' | 'match'
     candidates?: ReadonlyArray<number>
     highlightedCandidates?: ReadonlyArray<number>
+    clearedCandidates?: ReadonlyArray<number>
 }
 
-export const BoardCell: React.FC<BoardCellProps> = ({n, x, y, value, valueType, highlight, candidates = [], highlightedCandidates = []}) => {
+export const BoardCell: React.FC<BoardCellProps> = ({n, x, y, value, valueType, highlight, candidates = [], highlightedCandidates = [], clearedCandidates = []}) => {
     let w = 100/(n*n) // Cell width (in SVG coord space)
 
     const classes = sudokuBoardClasses
@@ -207,7 +213,12 @@ export const BoardCell: React.FC<BoardCellProps> = ({n, x, y, value, valueType, 
             })} fontSize={w*.75}
             x={(x+.5)*w} y={(y+.5)*w}
         >{value}</text>}
-        {candidates.length > 0 && <CellCandidates n={n} x={x} y={y} candidates={candidates} highlightedCandidates={highlightedCandidates}/>}
+        {candidates.length > 0 && <CellCandidates
+            n={n} x={x} y={y}
+            candidates={candidates}
+            highlightedCandidates={highlightedCandidates}
+            clearedCandidates={clearedCandidates}
+        />}
     </g>
 }
 
@@ -217,9 +228,10 @@ interface CellNotesProps {
     y: number
     candidates: ReadonlyArray<number>
     highlightedCandidates: ReadonlyArray<number>
+    clearedCandidates: ReadonlyArray<number>
 }
 
-export const CellCandidates: React.FC<CellNotesProps> = ({n, x, y, candidates, highlightedCandidates}) => {
+export const CellCandidates: React.FC<CellNotesProps> = ({n, x, y, candidates, highlightedCandidates, clearedCandidates}) => {
     let w = 100/(n*n) // Cell width (in SVG coord space)
     let sw = w*.8/n // Sub cell width
 
@@ -227,19 +239,24 @@ export const CellCandidates: React.FC<CellNotesProps> = ({n, x, y, candidates, h
     return <>
         {ArrayUtils.range(0, n*n).filter(i => candidates.includes(i+1)).map(i => {
             let sx = i % n, sy = Math.floor(i / n)
+
+            let cx = (x+.1)*w + (sx+.5)*sw
+            let cy = (y+.1)*w + (sy+.5)*sw
+
             return <React.Fragment key={i}>
                 {highlightedCandidates.includes(i+1) && <circle
                     className={classes.cellCandidate_highlight}
-                    cx={ (x+.1)*w + (sx+.5)*sw }
-                    cy={ (y+.1)*w + (sy+.5)*sw }
-                    r={sw/2}
+                    cx={cx} cy={cy} r={sw/2}
+                />}
+                {clearedCandidates.includes(i+1) && <line
+                    className={classes.cellCandidate_clear}
+                    x1={cx - sw/2} y1={cy + sw/2}
+                    x2={cx + sw/2} y2={cy - sw/2}
                 />}
                 <text
-                    key={i}
                     className={classes.cellCandidate}
                     fontSize={w*.75/n}
-                    x={ (x+.1)*w + (sx+.5)*sw }
-                    y={ (y+.1)*w + (sy+.5)*sw }
+                    x={cx} y={cy}
                 >{i+1}</text>
             </React.Fragment>
         })}

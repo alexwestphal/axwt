@@ -1,7 +1,9 @@
 
 import {Sudoku} from '../../data'
+import {TechniqueKey, SearchResult} from '../../technique'
 
 import {PlayActions} from './PlayActions'
+
 
 
 export interface PlayState {
@@ -13,6 +15,11 @@ export interface PlayState {
     current: Sudoku.Board
     prevChange: PlayActions.Any
     history: Sudoku.Board[]
+
+    techniques: TechniqueKey[]
+    searchResult: SearchResult | null
+    searchState: 'Ready' | 'Found' | 'NotFound'
+    candidatesGenerated: boolean
 }
 
 export namespace PlayState {
@@ -23,8 +30,14 @@ export namespace PlayState {
         highlight: 'On',
         current: null,
         prevChange: null,
-        history: []
+        history: [],
+
+        techniques: ['NakedSingle', 'HiddenSingle'],
+        searchResult: null,
+        searchState: 'Ready',
+        candidatesGenerated: false
+
     }
 }
 
-export type PlayEntryMode = 'Normal' | 'Note'
+export type PlayEntryMode = 'Normal' | 'Candidate'

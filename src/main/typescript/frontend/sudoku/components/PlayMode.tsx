@@ -57,10 +57,11 @@ const PlayMode: React.FC = () => {
 
         if('1' <= ev.key && ev.key <= '9' && !isKnownCell) {
             let value = parseInt(ev.key)
+
             if(playState.entryMode == 'Normal') {
                 dispatch(PlayActions.setCellValue(x, y, value))
-            } else if(playState.entryMode == 'Note') {
-                dispatch(PlayActions.toggleNote(x, y, value))
+            } else if(playState.entryMode == 'Candidate') {
+                dispatch(PlayActions.toggleCellCandidate(x, y, value))
             }
         } else switch(ev.key) {
             case 'ArrowDown':
@@ -118,8 +119,10 @@ const PlayMode: React.FC = () => {
             </div>
         </> }
         { playState.gameStage == 'Play' && <>
-            <SudokuBoard n={board.n} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown}>
+            <SudokuBoard n={board.n} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown} highlightSpace={playState.searchResult?.targetSpace}>
                 {board.cells.map(cell => {
+
+                    let highlightedCandidates = playState.searchResult?.candidateHighlights.find(c => c.x == cell.x && c.y == cell.y)?.candidates
 
                     let highlight: BoardCellProps['highlight'] = 'none'
                     if(activeCellCoord != null) {
@@ -129,7 +132,7 @@ const PlayMode: React.FC = () => {
                             else if(
                                 Sudoku.isSameColumn(board, cell, activeCell) ||
                                 Sudoku.isSameRow(board, cell, activeCell) ||
-                                Sudoku.isSameHouse(board, cell, activeCell)
+                                Sudoku.isSameBlock(board, cell, activeCell)
                             ) highlight = 'indicate'
                             else if(cell.value > 0 && cell.value == activeCell.value)
                                 highlight = 'match'
@@ -144,10 +147,12 @@ const PlayMode: React.FC = () => {
                         value={cell.value}
                         valueType={cell.valueType}
                         highlight={highlight}
-                        notes={cell.notes}
+                        candidates={cell.candidates}
+                        highlightedCandidates={highlightedCandidates}
                     />
                 })}
             </SudokuBoard>
+            {playState.searchResult != null && <Box textAlign="center">Found: {playState.searchResult.key}</Box>}
         </>}
         { playState.gameStage == 'Done' && <>
 
@@ -164,7 +169,7 @@ export const PlayModeControls: React.FC = () => {
     const playState = useTypedSelector(selectPlayState)
     const dispatch = useThunkDispatch()
 
-    let notesMode = playState.entryMode == 'Note'
+    let candidateMode = playState.entryMode == 'Candidate'
 
     return playState.gameStage == 'Play' && <>
         <ButtonGroup sx={{ marginRight: 4 }}>
@@ -177,12 +182,12 @@ export const PlayModeControls: React.FC = () => {
         </ButtonGroup>
 
         <ButtonGroup>
-            <Tooltip title="Toggle Notes Mode">
+            <Tooltip title="Toggle Candidates Mode">
                 <IconButton
-                    onClick={() => dispatch(PlayActions.setEntryMode(notesMode ? 'Normal' : 'Note'))}
-                    sx={{ color: notesMode ? lightBlue[500] : 'default' }}
+                    onClick={() => dispatch(PlayActions.setEntryMode(candidateMode ? 'Normal' : 'Candidate'))}
+                    sx={{ color: candidateMode ? lightBlue[500] : 'default' }}
                 >
-                    {notesMode ? <EditIcon/> : <EditOffIcon/>}
+                    {candidateMode ? <EditIcon/> : <EditOffIcon/>}
                 </IconButton>
             </Tooltip>
             <Tooltip title="Toggle Highlight">

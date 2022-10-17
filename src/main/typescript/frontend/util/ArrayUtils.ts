@@ -114,6 +114,14 @@ export namespace ArrayUtils {
         else array.push(value)
     }
 
+    export const occurrences = <T>(array: ReadonlyArray<T>, value: T): number => {
+        let count = 0
+        for(let item of array) {
+            if(item == value) count++
+        }
+        return count
+    }
+
     /**
      * Create an array holding a range of values
      * @param start Beginning of the range (inclusive)

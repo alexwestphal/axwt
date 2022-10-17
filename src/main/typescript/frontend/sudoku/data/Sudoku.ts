@@ -1,5 +1,4 @@
 import {ArrayUtils} from '@axwt/util'
-import SudokuBoard from '@axwt/sudoku/components/SudokuBoard'
 
 
 export namespace Sudoku {
@@ -23,10 +22,27 @@ export namespace Sudoku {
 
         readonly value: number
         readonly valueType: CellValueType
-        readonly notes: ReadonlyArray<number>
+        readonly candidates: ReadonlyArray<number>
         readonly conflicts: ReadonlyArray<number>
     }
 
+    export interface Column {
+        readonly houseType: 'Column'
+        readonly x: number
+    }
+
+    export interface Row {
+        readonly houseType: 'Row'
+        readonly y: number
+    }
+
+    export interface Block {
+        readonly houseType: 'Block'
+        readonly hx: number
+        readonly hy: number
+    }
+
+    export type House = Column | Row | Block
 
 
 
@@ -42,7 +58,7 @@ export namespace Sudoku {
                 y: Math.floor(index/n2),
                 value: 0,
                 valueType: 'None',
-                notes: [],
+                candidates: [],
                 conflicts: []
             }))
         }
@@ -62,7 +78,7 @@ export namespace Sudoku {
         })
     }
 
-    // Coordinate utilities
+    // Data utilities
 
     export const isSameCell = (board: Sudoku.Board, a: Coord, b: Coord): boolean => a.x == b.x && a.y == b.y
 
@@ -70,47 +86,49 @@ export namespace Sudoku {
 
     export const isSameRow = (board: Sudoku.Board, a: Coord, b: Coord): boolean => a.y == b.y
 
-    export const isSameHouse = (board: Sudoku.Board, a: Coord, b: Coord): boolean =>
+    export const isSameBlock = (board: Sudoku.Board, a: Coord, b: Coord): boolean =>
         Math.floor(a.x/board.n) == Math.floor(b.x/board.n) && Math.floor(a.y/board.n) == Math.floor(b.y/board.n)
 
 
     // Board Manipulation
 
     /**
-     * Calculate the notes for all currently empty cells
+     * Calculate the candidates for all currently empty cells
      * @param board
      */
-    export const calculateNotes = (board: Sudoku.Board): Sudoku.Board => updateCells(board, cells => {
+    export const calculateCandidates = (board: Sudoku.Board): Sudoku.Board => updateCells(board, cells => {
 
         for(let y=0; y < board.n2; y++) {
             for(let x = 0; x < board.n2; x++) {
                 let cellIndex = x + y * board.n2
                 let cell = cells[cellIndex]
                 if(cell.valueType == 'None') {
-                    let notes = ArrayUtils.range(1, board.n2 + 1)
+                    let candidates = ArrayUtils.range(1, board.n2 + 1)
 
                     // Scan for values already in row
                     for (let xi = 0; xi < board.n2; xi++) {
                         let otherCell = cells[xi + y * board.n2]
-                        if (otherCell.value > 0) ArrayUtils.remove(notes, otherCell.value)
+                        if (otherCell.value > 0) ArrayUtils.remove(candidates, otherCell.value)
                     }
-                    //Scan for values already in column
+                    // Scan for values already in column
                     for (let yi = 0; yi < board.n2; yi++) {
                         let otherCell = cells[x + yi * board.n2]
-                        if (otherCell.value > 0) ArrayUtils.remove(notes, otherCell.value)
+                        if (otherCell.value > 0) ArrayUtils.remove(candidates, otherCell.value)
                     }
-                    // Scan for values already in house
+                    // Scan for values already in block
                     let hx = Math.floor(x / board.n), hy = Math.floor(y / board.n)
                     for (let yi = 0; yi < board.n; yi++) {
                         for (let xi = 0; xi < board.n; xi++) {
                             let tx = hx * board.n + xi
                             let ty = hy * board.n + yi
                             let otherCell = board.cells[tx + ty * board.n2]
-                            if (otherCell.value > 0) ArrayUtils.remove(notes, otherCell.value)
+                            if (otherCell.value > 0) ArrayUtils.remove(candidates, otherCell.value)
                         }
                     }
 
-                    cells[cellIndex] = { ...cell, notes }
+                    cells[cellIndex] = { ...cell, candidates: candidates }
+                } else if(cell.candidates == null) {
+                    cells[cellIndex] = { ...cell, candidates: [] }
                 }
             }
         }
@@ -145,7 +163,7 @@ export namespace Sudoku {
             return updateCells(board, cells => {
                 let cellIndex = x + y * board.n2
                 let cell = cells[cellIndex]
-                cells[cellIndex] = { ...cell, value: 0, valueType: 'None', notes: [], conflicts: []}
+                cells[cellIndex] = { ...cell, value: 0, valueType: 'None', candidates: [], conflicts: []}
 
                 // Clear the conflicts from the other cells
                 for(let ci of cell.conflicts) {
@@ -160,29 +178,21 @@ export namespace Sudoku {
                 }
             })
         } else {
-            return updateCell(board, x, y, cell => ({ value: 0, valueType: 'None', notes: [] }))
+            return updateCell(board, x, y, { value: 0, valueType: 'None', candidates: [] })
         }
     }
 
-    export const clearNotes = (board: Sudoku.Board): Sudoku.Board => {
+    export const clearCandidates = (board: Sudoku.Board): Sudoku.Board => {
         return updateCells(board, cells => {
             for(let cell of cells) {
-                if(cell.notes.length > 0) {
-                    cells[cell.index] = { ...cell, notes: [] }
+                if(cell.candidates.length > 0) {
+                    cells[cell.index] = { ...cell, candidates: [] }
                 }
             }
         })
     }
 
-    export const getCell = (board: Sudoku.Board, x: number, y: number): Cell => board.cells[x + y * board.n2]
-
-    export const getColumn = (board: Sudoku.Board, x: number): ReadonlyArray<Sudoku.Cell> => {
-        let column = new Array<Sudoku.Cell>(board.n2)
-        for(let y=0; y<board.n2; y++) column[y] = board.cells[x + y * board.n2]
-        return column
-    }
-
-    export const getHouse = (board: Sudoku.Board, hx: number, hy: number): ReadonlyArray<Sudoku.Cell> => {
+    export const getBlock = (board: Sudoku.Board, hx: number, hy: number): ReadonlyArray<Sudoku.Cell> => {
         let house = new Array<Sudoku.Cell>(board.n2)
         for(let yi=0; yi<board.n; yi++) {
             for(let xi=0; xi<board.n; xi++) {
@@ -194,11 +204,35 @@ export namespace Sudoku {
         return house
     }
 
+    export const getBlocks = (board: Sudoku.Board): (Sudoku.Block & { cells: ReadonlyArray<Sudoku.Cell> })[] =>
+        ArrayUtils.range(0, board.n2).map(i => {
+            let hx = i % board.n
+            let hy = Math.floor(i/board.n)
+            return { houseType: 'Block', hx, hy, cells: getBlock(board, hx, hy) }
+        })
+
+    export const getCell = (board: Sudoku.Board, x: number, y: number): Cell => board.cells[x + y * board.n2]
+
+    export const getColumn = (board: Sudoku.Board, x: number): ReadonlyArray<Sudoku.Cell> => {
+        let column = new Array<Sudoku.Cell>(board.n2)
+        for(let y=0; y<board.n2; y++) column[y] = board.cells[x + y * board.n2]
+        return column
+    }
+
+    export const getColumns = (board: Sudoku.Board): (Sudoku.Column & { cells: ReadonlyArray<Sudoku.Cell> })[] =>
+        ArrayUtils.range(0, board.n2).map(x => ({ houseType: 'Column', x, cells: getColumn(board, x) }))
+
     export const getRow = (board: Sudoku.Board, y: number): ReadonlyArray<Sudoku.Cell> => {
         let row = new Array<Sudoku.Cell>(board.n2)
         for(let x=0; x<board.n2; x++) row[x] = board.cells[x + y * board.n2]
         return row
     }
+
+    export const getRows = (board: Sudoku.Board): (Sudoku.Row & { cells: ReadonlyArray<Sudoku.Cell> })[] =>
+        ArrayUtils.range(0, board.n2).map(y => ({ houseType: 'Row', y,  cells: getRow(board, y) }))
+
+    export const setCellCandidates = (board: Sudoku.Board, x: number, y: number, candidates: ReadonlyArray<number>): Sudoku.Board =>
+        updateCell(board, x, y, { candidates })
 
     export const setCellValueUser = (board: Sudoku.Board, x: number, y: number, value: number): Sudoku.Board => {
         let cellIndex = x + y * board.n2
@@ -213,11 +247,11 @@ export namespace Sudoku {
             cell = cells[cellIndex]
             let conflicts: number[] = []
 
-            // Scan for conflicts and clear notes
+            // Scan for conflicts and clear candidates
             let cellsToCheck = [
                 ...getRow(board1, y).filter(c => c.x != x),
                 ...getColumn(board1, x).filter(c => c.y != y),
-                ...getHouse(board1, Math.floor(x/board.n), Math.floor(y/board.n)).filter(c => c.x != x && c.y != y)
+                ...getBlock(board1, Math.floor(x/board.n), Math.floor(y/board.n)).filter(c => c.x != x && c.y != y)
             ]
             for(let otherCell of cellsToCheck) {
                 if(value == otherCell.value) {
@@ -226,10 +260,10 @@ export namespace Sudoku {
                     cells[otherCell.index] = { ...otherCell,
                         conflicts: [...otherCell.conflicts, cellIndex],
                         valueType: otherCell.valueType == 'Known' ? 'Known-Conflict' : 'User-Conflict',
-                        notes: otherCell.notes.filter(i => i != cellIndex)
+                        candidates: otherCell.candidates.filter(i => i != cellIndex)
                     }
-                } else if(otherCell.notes.length > 0) {
-                    cells[otherCell.index] = { ...otherCell, notes: otherCell.notes.filter(n => n != value) }
+                } else if(otherCell.candidates.length > 0) {
+                    cells[otherCell.index] = { ...otherCell, candidates: otherCell.candidates.filter(n => n != value) }
                 }
             }
 
@@ -250,19 +284,19 @@ export namespace Sudoku {
     export const setCellValueKnown = (board: Sudoku.Board, x: number, y: number, value: number): Sudoku.Board =>
         updateCell(board, x, y, (cell) => ({ value, valueType: 'Known' }))
 
-    export const setCellNotes = (board: Sudoku.Board, x: number, y: number, notes: number[]): Sudoku.Board =>
-        updateCell(board, x, y, (cell) => ({ notes }))
-
-    export const toggleCellNote = (board: Sudoku.Board, x: number, y: number, note: number): Sudoku.Board =>
+    export const toggleCellCandidate = (board: Sudoku.Board, x: number, y: number, candidate: number): Sudoku.Board =>
         updateCell(board, x, y, (cell) => ({
-            notes: cell.notes.includes(note) ? cell.notes.filter(n => n != note) : [...cell.notes, note]
+            candidates: cell.candidates.includes(candidate) ? cell.candidates.filter(n => n != candidate) : [...cell.candidates, candidate]
         }))
 
-    const updateCell = (board: Sudoku.Board, x: number, y: number, update: (cell: Cell) => Partial<Cell>): Sudoku.Board =>
+    const updateCell = (board: Sudoku.Board, x: number, y: number, update: Partial<Cell> | ((cell: Cell) => Partial<Cell>)): Sudoku.Board =>
         updateCells(board, cells => {
             let cellIndex = x + y * board.n2
             let cell = cells[cellIndex]
-            cells[cellIndex] = { ...cell, ...update(cell) }
+
+            let partial = update instanceof Function ? update(cell) : update
+
+            cells[cellIndex] = { ...cell, ...partial }
         })
 
     const updateCells = (board: Sudoku.Board, mutate: (cells: Cell[]) => void): Sudoku.Board => {

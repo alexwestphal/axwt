@@ -5,6 +5,9 @@ import {Box, Button, ButtonGroup, IconButton, Tooltip} from '@mui/material'
 import {lightBlue, grey} from '@mui/material/colors'
 
 import AutoFixNormalIcon from '@mui/icons-material/AutoFixNormal'
+import AutoFixOffIcon from '@mui/icons-material/AutoFixOff'
+import FlashlightOffIcon from '@mui/icons-material/FlashlightOff'
+import FlashlightOnIcon from '@mui/icons-material/FlashlightOn'
 import UndoIcon from '@mui/icons-material/Undo'
 import RedoIcon from '@mui/icons-material/Redo'
 import EditIcon from '@mui/icons-material/Edit'
@@ -16,7 +19,7 @@ import {createClasses} from '@axwt/util'
 import {Sudoku} from '../data'
 import {
     PlayActions,
-    selectCurrentPlayBoard, selectEntryMode, selectGameStage,
+    selectCurrentPlayBoard, selectPlayState,
     useThunkDispatch,
     useTypedSelector
 } from '../store'
@@ -31,8 +34,7 @@ const playModeClasses = createClasses('PlayMode', ['overlay'])
 const PlayMode: React.FC = () => {
 
     const board = useTypedSelector(selectCurrentPlayBoard)
-    const entryMode = useTypedSelector(selectEntryMode)
-    const gameStage = useTypedSelector(selectGameStage)
+    const playState = useTypedSelector(selectPlayState)
 
     const dispatch = useThunkDispatch()
 
@@ -55,9 +57,9 @@ const PlayMode: React.FC = () => {
 
         if('1' <= ev.key && ev.key <= '9' && !isKnownCell) {
             let value = parseInt(ev.key)
-            if(entryMode == 'Normal') {
+            if(playState.entryMode == 'Normal') {
                 dispatch(PlayActions.setCellValue(x, y, value))
-            } else if(entryMode == 'Note') {
+            } else if(playState.entryMode == 'Note') {
                 dispatch(PlayActions.toggleNote(x, y, value))
             }
         } else switch(ev.key) {
@@ -97,7 +99,7 @@ const PlayMode: React.FC = () => {
             alignItems: 'center',
         },
     }}>
-        { gameStage == 'Init' && <>
+        { playState.gameStage == 'Init' && <>
             <SudokuBoard n={board.n}>
                 {board.cells.map(cell =>
                     <BoardCell
@@ -115,21 +117,25 @@ const PlayMode: React.FC = () => {
                 >Start Game</Button>
             </div>
         </> }
-        { gameStage == 'Play' && <>
+        { playState.gameStage == 'Play' && <>
             <SudokuBoard n={board.n} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown}>
                 {board.cells.map(cell => {
 
                     let highlight: BoardCellProps['highlight'] = 'none'
                     if(activeCellCoord != null) {
                         let activeCell = Sudoku.getCell(board, activeCellCoord.x, activeCellCoord.y)
-                        if(Sudoku.isSameCell(board, cell, activeCellCoord)) highlight = 'active'
-                        else if(
-                            Sudoku.isSameColumn(board, cell, activeCell) ||
-                            Sudoku.isSameRow(board, cell, activeCell) ||
-                            Sudoku.isSameHouse(board, cell, activeCell)
-                        ) highlight = 'indicate'
-                        else if(cell.value > 0 && cell.value == activeCell.value)
-                            highlight = 'match'
+                        if(playState.highlight == 'On') {
+                            if(Sudoku.isSameCell(board, cell, activeCellCoord)) highlight = 'active'
+                            else if(
+                                Sudoku.isSameColumn(board, cell, activeCell) ||
+                                Sudoku.isSameRow(board, cell, activeCell) ||
+                                Sudoku.isSameHouse(board, cell, activeCell)
+                            ) highlight = 'indicate'
+                            else if(cell.value > 0 && cell.value == activeCell.value)
+                                highlight = 'match'
+                        } else {
+                            if(Sudoku.isSameCell(board, cell, activeCellCoord)) highlight = 'active'
+                        }
                     }
 
                     return <BoardCell
@@ -143,7 +149,7 @@ const PlayMode: React.FC = () => {
                 })}
             </SudokuBoard>
         </>}
-        { gameStage == 'Done' && <>
+        { playState.gameStage == 'Done' && <>
 
         </>}
     </Box>
@@ -155,30 +161,13 @@ export default PlayMode
 
 export const PlayModeControls: React.FC = () => {
 
-    const entryMode = useTypedSelector(selectEntryMode)
-    const gameStage = useTypedSelector(selectGameStage)
+    const playState = useTypedSelector(selectPlayState)
     const dispatch = useThunkDispatch()
 
-    let notesMode = entryMode == 'Note'
+    let notesMode = playState.entryMode == 'Note'
 
-    return gameStage == 'Play' && <>
-        <ButtonGroup>
-            <Tooltip title="Compute Notes">
-                <IconButton onClick={() => dispatch(PlayActions.generateNotes())}>
-                    <AutoFixNormalIcon/>
-                </IconButton>
-            </Tooltip>
-            <Tooltip title="Toggle Notes Mode">
-                <IconButton
-                    onClick={() => dispatch(PlayActions.setEntryMode(notesMode ? 'Normal' : 'Note'))}
-                    sx={{ color: notesMode ? lightBlue[500] : grey[500] }}
-                >
-                    {notesMode ? <EditIcon/> : <EditOffIcon/>}
-                </IconButton>
-            </Tooltip>
-        </ButtonGroup>
-
-        <ButtonGroup>
+    return playState.gameStage == 'Play' && <>
+        <ButtonGroup sx={{ marginRight: 4 }}>
             <IconButton>
                 <UndoIcon/>
             </IconButton>
@@ -186,5 +175,34 @@ export const PlayModeControls: React.FC = () => {
                 <RedoIcon/>
             </IconButton>
         </ButtonGroup>
+
+        <ButtonGroup>
+            <Tooltip title="Toggle Notes Mode">
+                <IconButton
+                    onClick={() => dispatch(PlayActions.setEntryMode(notesMode ? 'Normal' : 'Note'))}
+                    sx={{ color: notesMode ? lightBlue[500] : 'default' }}
+                >
+                    {notesMode ? <EditIcon/> : <EditOffIcon/>}
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Toggle Highlight">
+                <IconButton
+                    onClick={() => dispatch(PlayActions.toggleHighlight())}
+                    sx={{ color: playState.highlight == 'On' ? lightBlue[500] : 'default' }}
+                >
+                    {playState.highlight == 'On' ? <FlashlightOnIcon/> : <FlashlightOffIcon/>}
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Toggle Assistant">
+                <IconButton
+                    onClick={() => dispatch(PlayActions.toggleAssistant())}
+                    sx={{ color: playState.assistant == 'On' ? lightBlue[500] : 'default' }}
+                >
+                    {playState.assistant == 'On' ? <AutoFixNormalIcon/> : <AutoFixOffIcon/>}
+                </IconButton>
+            </Tooltip>
+        </ButtonGroup>
+
+
     </>
 }

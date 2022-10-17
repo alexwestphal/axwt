@@ -17,6 +17,9 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
             draft.current = castDraft(Sudoku.clearCell(draft.current, action.meta.x, action.meta.y))
             draft.prevChange = action
             break
+        case 'su/play/clearNotes':
+            draft.current = castDraft(Sudoku.clearNotes(draft.current))
+            break
         case 'su/play/generateNotes':
             draft.current = castDraft(Sudoku.calculateNotes(draft.current))
             draft.prevChange = action
@@ -35,6 +38,12 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
         case 'su/play/start':
             draft.current = castDraft(action.payload)
             draft.gameStage = 'Play'
+            break
+        case 'su/play/toggleAssistant':
+            draft.assistant = draft.assistant == 'Off' ? 'On' : 'Off'
+            break
+        case 'su/play/toggleHighlight':
+            draft.highlight = draft.highlight == 'Off' ? 'On' : 'Off'
             break
         case 'su/play/toggleNote': {
             draft.current = castDraft(Sudoku.toggleCellNote(draft.current, action.meta.x, action.meta.y, action.payload))

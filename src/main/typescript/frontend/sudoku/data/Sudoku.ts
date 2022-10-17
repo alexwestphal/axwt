@@ -164,6 +164,16 @@ export namespace Sudoku {
         }
     }
 
+    export const clearNotes = (board: Sudoku.Board): Sudoku.Board => {
+        return updateCells(board, cells => {
+            for(let cell of cells) {
+                if(cell.notes.length > 0) {
+                    cells[cell.index] = { ...cell, notes: [] }
+                }
+            }
+        })
+    }
+
     export const getCell = (board: Sudoku.Board, x: number, y: number): Cell => board.cells[x + y * board.n2]
 
     export const getColumn = (board: Sudoku.Board, x: number): ReadonlyArray<Sudoku.Cell> => {

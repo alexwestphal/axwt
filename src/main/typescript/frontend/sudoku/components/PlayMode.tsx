@@ -33,7 +33,7 @@ const playModeClasses = createClasses('PlayMode', ['overlay'])
 
 const PlayMode: React.FC = () => {
 
-    const board = useTypedSelector(selectCurrentPlayBoard)
+    const board = useTypedSelector(selectCurrentPlayBoard,  (left, right) => left.version == right.version)
     const playState = useTypedSelector(selectPlayState)
 
     const dispatch = useThunkDispatch()

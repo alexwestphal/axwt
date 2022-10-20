@@ -10,7 +10,7 @@ export const selectPlayState: Selector<SU.RootState, PlayState> =
     (state) => state.su.play
 
 export const selectPlayAssistant: Selector<SU.RootState, 'On' | 'Off'> =
-    (state) => state.su.play.assistant
+    (state) => state.su.play.gameStage == 'Play' ? state.su.play.assistant : 'Off'
 
 export const selectCurrentPlayBoard: Selector<SU.RootState, Sudoku.Board> =
     (state) => state.su.play.current || state.su.board.current

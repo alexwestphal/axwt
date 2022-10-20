@@ -6,6 +6,6 @@ export interface AppState {
 }
 export namespace AppState {
     export const Default: AppState = {
-        appMode: 'Define'
+        appMode: 'Play'
     }
 }

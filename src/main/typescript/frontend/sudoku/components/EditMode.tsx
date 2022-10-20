@@ -16,7 +16,7 @@ import {mainPanelClasses} from './MainPanel'
 
 const EditMode: React.FC = () => {
 
-    const board = useTypedSelector(selectEditBoard)
+    const board = useTypedSelector(selectEditBoard, (left, right) => left.version == right.version)
 
     const dispatch = useThunkDispatch()
 

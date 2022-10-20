@@ -1,7 +1,9 @@
 
+import {ArrayUtils} from '@axwt/util'
+
 import {Sudoku} from '../data'
 import {SearchTechnique, SearchResult, CandidateClearances} from './SearchTechnique'
-import {ArrayUtils} from '@axwt/util'
+
 
 export class NakedPairTechnique implements SearchTechnique {
 

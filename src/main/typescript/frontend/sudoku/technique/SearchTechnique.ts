@@ -1,6 +1,6 @@
 import {Sudoku} from '../data'
 
-export type TechniqueKey = 'NakedSingle' | 'HiddenSingle' | 'NakedPair' | 'HiddenPair'
+export type TechniqueKey = 'Jellyfish' | 'HiddenQuad' | 'HiddenPair' | 'HiddenSingle' | 'HiddenTriple' | 'NakedPair' | 'NakedQuad' | 'NakedSingle' | 'NakedTriple' | 'PointingPair' | 'PointingTriple' | 'Swordfish' | 'XWing' | 'YWing'
 
 export interface SearchTechnique {
 

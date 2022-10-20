@@ -13,7 +13,7 @@ import SudokuBoard, {BoardCell} from './SudokuBoard'
 
 const SolveMode: React.FC = () => {
 
-    const initBoard = useTypedSelector(selectEditBoard)
+    const initBoard = useTypedSelector(selectEditBoard, (left, right) => left.version == right.version)
     const solveState = useTypedSelector(selectSolveState)
     const result = useTypedSelector(selectSolveResult)
 

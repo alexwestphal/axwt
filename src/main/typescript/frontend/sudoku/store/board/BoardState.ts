@@ -14,7 +14,7 @@ export namespace BoardState {
         boardType: 'Standard',
         boardSize: 3,
 
-        current: Sudoku.newBoard(3)
+        current: new Sudoku.Board(3)
 
     }
 }

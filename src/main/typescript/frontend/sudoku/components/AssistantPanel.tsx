@@ -95,7 +95,23 @@ export const AssistantPanel: React.FC = () => {
             <Grid item xs={6}>
                 <TechniqueSet
                     name="Easy"
-                    techniques={["NakedPair", "HiddenPair"]}
+                    techniques={["NakedPair", "HiddenPair", "PointingPair"]}
+                    active={playState.techniques}
+                    onToggleTechnique={(key) => dispatch(PlayActions.toggleTechnique(key))}
+                />
+            </Grid>
+            <Grid item xs={6}>
+                <TechniqueSet
+                    name="Medium"
+                    techniques={["NakedTriple", "NakedQuad", "PointingTriple", "HiddenTriple",  "HiddenQuad"]}
+                    active={playState.techniques}
+                    onToggleTechnique={(key) => dispatch(PlayActions.toggleTechnique(key))}
+                />
+            </Grid>
+            <Grid item xs={6}>
+                <TechniqueSet
+                    name="Hard"
+                    techniques={["XWing", "YWing", "Swordfish", "Jellyfish"]}
                     active={playState.techniques}
                     onToggleTechnique={(key) => dispatch(PlayActions.toggleTechnique(key))}
                 />

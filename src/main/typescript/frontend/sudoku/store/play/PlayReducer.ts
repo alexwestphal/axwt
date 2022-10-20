@@ -26,8 +26,7 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
             }
 
             draft.current = castDraft(board)
-            draft.searchResult = null
-            draft.searchState = 'Ready'
+            resetSearchState(draft)
             break
         }
         case 'su/play/clearCell':
@@ -38,6 +37,7 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
         case 'su/play/clearCellCandidates':
             draft.current = castDraft(Sudoku.clearCandidates(draft.current))
             draft.candidatesGenerated = false
+            resetSearchState(draft)
             break
         case 'su/play/foundNext':
             draft.searchResult = castDraft(action.payload)
@@ -79,8 +79,12 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
             if(draft.techniques.includes(action.payload)) ArrayUtils.remove(draft.techniques, action.payload)
             else draft.techniques.push(action.payload)
 
-            draft.searchResult = null
-            draft.searchState = 'Ready'
+            resetSearchState(draft)
             break
     }
 }, PlayState.Default)
+
+const resetSearchState = (draft: Draft<PlayState>) => {
+    draft.searchResult = null
+    draft.searchState = 'Ready'
+}

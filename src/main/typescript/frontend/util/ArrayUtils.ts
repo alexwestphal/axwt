@@ -72,8 +72,8 @@ export namespace ArrayUtils {
     }
 
     export const equals = <T>(xs: ReadonlyArray<T>, ys: ReadonlyArray<T>): boolean => {
-        if(xs == null || ys == null || xs.length != ys.length) return false
-        if(xs == ys) return true
+        if(xs === null || ys === null || xs.length != ys.length) return false
+        if(xs === ys) return true
 
         for(let i=0; i<xs.length; i++) {
             if(xs[i] != ys[i]) return false

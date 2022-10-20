@@ -284,7 +284,7 @@ export const HighlightHouse: React.FC<HighlightHouseProps> = ({n, house}) => {
         }
         case 'Block': {
             let s = 100 / n
-            props = { x: house.hx * s + .5, y: house.hy * s + .5, width: s-1, height: s-1 }
+            props = { x: house.bx * s + .5, y: house.by * s + .5, width: s-1, height: s-1 }
             break
         }
 

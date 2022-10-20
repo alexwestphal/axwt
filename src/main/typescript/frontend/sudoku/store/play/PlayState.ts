@@ -26,13 +26,13 @@ export namespace PlayState {
     export const Default: PlayState = {
         gameStage: 'Init',
         entryMode: 'Normal',
-        assistant: 'Off',
+        assistant: 'On',
         highlight: 'On',
         current: null,
         prevChange: null,
         history: [],
 
-        techniques: ['NakedSingle', 'HiddenSingle'],
+        techniques: ['NakedSingle', 'HiddenSingle', 'NakedPair', 'HiddenPair', 'PointingPair'],
         searchResult: null,
         searchState: 'Ready',
         candidatesGenerated: false

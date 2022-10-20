@@ -21,7 +21,7 @@ export const BoardReducer: Reducer<BoardState> = produce((draft: Draft<BoardStat
             draft.boardType = action.meta.boardType
             draft.boardSize = action.meta.boardSize
 
-            draft.current = castDraft(Sudoku.newBoard(action.meta.boardSize))
+            draft.current = castDraft(new Sudoku.Board(action.meta.boardSize))
             break
         case 'su/board/setCellValue':
             draft.current = castDraft(Sudoku.setCellValueKnown(draft.current, action.meta.x, action.meta.y, action.payload))

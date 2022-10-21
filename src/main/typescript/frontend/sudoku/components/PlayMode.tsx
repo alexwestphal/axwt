@@ -129,16 +129,16 @@ const PlayMode: React.FC = () => {
                     if(activeCellCoord != null) {
                         let activeCell = Sudoku.getCell(board, activeCellCoord.x, activeCellCoord.y)
                         if(playState.highlight == 'On') {
-                            if(Sudoku.isSameCell(board, cell, activeCellCoord)) highlight = 'active'
+                            if(board.isSameCell(cell, activeCellCoord)) highlight = 'active'
                             else if(
-                                Sudoku.isSameColumn(board, cell, activeCell) ||
-                                Sudoku.isSameRow(board, cell, activeCell) ||
-                                Sudoku.isSameBlock(board, cell, activeCell)
+                                board.isSameColumn(cell, activeCell) ||
+                                board.isSameRow(cell, activeCell) ||
+                                board.isSameBlock(cell, activeCell)
                             ) highlight = 'indicate'
                             else if(cell.value > 0 && cell.value == activeCell.value)
                                 highlight = 'match'
                         } else {
-                            if(Sudoku.isSameCell(board, cell, activeCellCoord)) highlight = 'active'
+                            if(board.isSameCell(cell, activeCellCoord)) highlight = 'active'
                         }
                     }
 

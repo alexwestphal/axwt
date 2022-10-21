@@ -21,7 +21,7 @@ export class PointingPairTechnique implements SearchTechnique {
                     } else if(house.houseType != 'Column' && board.isSameColumn(occurrenceA, occurrenceB)) {
                         clearingHouse = Sudoku.getColumn(board, occurrenceA.x)
                     } else if(house.houseType != 'Block' && board.isSameBlock(occurrenceA, occurrenceB)) {
-                        let {bx, by} = Sudoku.whichBlock(board, occurrenceA.x, occurrenceB.y)
+                        let {bx, by} = board.whichBlock(occurrenceA.x, occurrenceB.y)
                         clearingHouse = Sudoku.getBlock(board, bx, by)
                     }
 

@@ -15,11 +15,11 @@ export namespace Sudoku {
         readonly nRange: ReadonlyArray<IndexN>
         readonly n2Range: ReadonlyArray<IndexN2>
 
-        constructor(n: number) {
+        constructor(n: number, version: number = 1, cells: ReadonlyArray<Cell> = null) {
             this.n = n
             this.n2 = n * n
             this.n4 = n * n * n * n
-            this.cells = ArrayUtils.range(0, this.n4).map(index => ({
+            this.cells = cells || ArrayUtils.range(0, this.n4).map(index => ({
                 index,
                 x: index % this.n2,
                 y: Math.floor(index/this.n2),
@@ -29,10 +29,31 @@ export namespace Sudoku {
                 conflicts: []
             }))
 
-            this.version = 1
+            this.version = version
             this.availableCandidates = ArrayUtils.range(1, this.n2+1)
             this.nRange = ArrayUtils.range(0, this.n)
             this.n2Range = ArrayUtils.range(0, this.n2)
+        }
+
+        // Caching
+
+        private _cache: Map<string, any> = new Map()
+
+        cache<T>(key: string, produce: () => T): T {
+            if(this._cache.has(key)) return this._cache.get(key)
+            else {
+                let value = produce()
+                this._cache.set(key, value)
+                return value
+            }
+    
+        }
+        
+
+        // Conversions
+
+        coordToIndex(a: Coord): IndexN4 {
+            return a.x + a.y * this.n2
         }
 
         indexToCoord(a: IndexN4): Coord {
@@ -40,6 +61,25 @@ export namespace Sudoku {
                 x: a % this.n2,
                 y: Math.floor(a/this.n2)
             }
+        }
+
+
+        // Structure checking
+
+        isSameBlock(a: IndexN4 | Coord, b: IndexN4 | Coord): boolean {
+            if(typeof a === 'number') a = this.indexToCoord(a)
+            if(typeof b === 'number') b = this.indexToCoord(b)
+            return Math.floor(a.x/this.n) == Math.floor(b.x/this.n) && Math.floor(a.y/this.n) == Math.floor(b.y/this.n)
+        }
+
+        isSameCell(a: IndexN4 | Coord, b: IndexN4 | Coord) {
+            if(typeof a !== 'number') {
+                a = a.x + a.y * this.n2
+            }
+            if(typeof b !== 'number') {
+                b = b.x +b.y * this.n2
+            }
+            return a == b
         }
 
         isSameColumn(a : IndexN4 | Coord, b: IndexN4 | Coord) {
@@ -56,10 +96,8 @@ export namespace Sudoku {
             return a.y == b.y
         }
 
-        isSameBlock(a: IndexN4 | Coord, b: IndexN4 | Coord): boolean {
-            if(typeof a === 'number') a = this.indexToCoord(a)
-            if(typeof b === 'number') b = this.indexToCoord(b)
-            return Math.floor(a.x/this.n) == Math.floor(b.x/this.n) && Math.floor(a.y/this.n) == Math.floor(b.y/this.n)
+        whichBlock(x: IndexN2, y: IndexN2): { blockX: IndexN, blockY: IndexN } {
+            return { blockX: Math.floor(x/this.n), blockY: Math.floor(y/this.n) }
         }
     }
 
@@ -146,44 +184,6 @@ export namespace Sudoku {
         })
     }
 
-    // Data utilities
-
-    export const isSameCell = (board: Sudoku.Board, a: Coord, b: Coord): boolean => a.x == b.x && a.y == b.y
-
-    export const isSameColumn = (board: Sudoku.Board, a: Coord, b: Coord): boolean => a.x == b.x
-
-    export const isSameRow = (board: Sudoku.Board, a: Coord, b: Coord): boolean => a.y == b.y
-
-    export const isSameBlock = (board: Sudoku.Board, a: Coord, b: Coord): boolean =>
-        Math.floor(a.x/board.n) == Math.floor(b.x/board.n) && Math.floor(a.y/board.n) == Math.floor(b.y/board.n)
-
-    export const whichBlock = (board: Sudoku.Board, x: IndexN2, y: IndexN2): { bx: IndexN, by: IndexN } =>
-        ({ bx: Math.floor(x/board.n), by: Math.floor(y/board.n) })
-
-
-
-    // Caching
-
-    let _cacheVersion = 0
-    let _cache: Map<string, any>
-
-    const cache = <T> (board: Sudoku.Board, key: string, produce: () => T): T => {
-        if(board.version > _cacheVersion) {
-            _cacheVersion = board.version
-            _cache = new Map<string, any>()
-        }
-
-        if(_cache.has(key)) return _cache.get(key)
-        else {
-            let value = produce()
-            _cache.set(key, value)
-            return value
-        }
-
-    }
-
-
-
     // Accessors
 
     export const checkGuess = (board: Sudoku.Board, x: IndexN2, y: IndexN2, value: Value): boolean => {
@@ -198,11 +198,11 @@ export namespace Sudoku {
         }
 
         // Check rest of block
-        let { bx, by } = whichBlock(board, x, y)
+        let { blockX, blockY } = board.whichBlock(x, y)
         for(let i of board.nRange) {
             for(let j of board.nRange) {
-                let tx = bx * board.n + j
-                let ty = by * board.n + i
+                let tx = blockX * board.n + j
+                let ty = blockY * board.n + i
                 if(tx != x && ty != y && board.cells[tx + ty * board.n2].value == value) return false
             }
         }
@@ -211,7 +211,7 @@ export namespace Sudoku {
     }
 
     export const getAllHouses = (board: Sudoku.Board): HouseWithCells[] =>
-        cache(board, "getAllHouses", () => [...getBlocks(board), ...getColumns(board), ...getRows(board)])
+        board.cache("getAllHouses", () => [...getBlocks(board), ...getColumns(board), ...getRows(board)])
 
     export const getBlock = (board: Sudoku.Board, bx: number, by: number): ReadonlyArray<Sudoku.Cell> => {
         let house = new Array<Sudoku.Cell>(board.n2)
@@ -226,7 +226,7 @@ export namespace Sudoku {
     }
 
     export const getBlocks = (board: Sudoku.Board): (Sudoku.Block & { cells: ReadonlyArray<Sudoku.Cell> })[] =>
-        cache(board, "getBlocks", () =>
+        board.cache("getBlocks", () =>
             board.nRange.map(i => {
                 let bx = i % board.n
                 let by = Math.floor(i/board.n)
@@ -263,7 +263,7 @@ export namespace Sudoku {
     }
 
     export const getColumns = (board: Sudoku.Board): (Sudoku.Column & { cells: ReadonlyArray<Sudoku.Cell> })[] =>
-        cache(board, "getColumns", () =>
+        board.cache("getColumns", () =>
             board.n2Range.map(x => ({ houseType: 'Column', houseId: `Column-${x}`, x, cells: getColumn(board, x) }))
         )
 
@@ -306,11 +306,11 @@ export namespace Sudoku {
                         if (otherCell.value > 0) ArrayUtils.remove(candidates, otherCell.value)
                     }
                     // Scan for values already in block
-                    let { bx, by } = whichBlock(board, x, y)
+                    let { blockX, blockY } = board.whichBlock(x, y)
                     for (let yi of board.nRange) {
                         for (let xi of board.nRange) {
-                            let tx = bx * board.n + xi
-                            let ty = by * board.n + yi
+                            let tx = blockX * board.n + xi
+                            let ty = blockY * board.n + yi
                             let otherCell = board.cells[tx + ty * board.n2]
                             if (otherCell.value > 0) ArrayUtils.remove(candidates, otherCell.value)
                         }
@@ -431,7 +431,7 @@ export namespace Sudoku {
         let cells = [...board.cells]
         mutate(cells)
 
-        return { ...board, version: board.version+1, cells }
+        return new Board(board.n, board.version+1, cells)
     }
 
     export const withGuesses = (board: Sudoku.Board, guesses: number[]): Sudoku.Board => {
@@ -440,7 +440,7 @@ export namespace Sudoku {
             cell.valueType == 'Known' ? cell : { ...cell, value: guesses[cellIndex], valueType: 'Guess' }
         )
 
-        return { ...board, version: board.version+1, cells }
+        return new Board(board.n, board.version+1, cells)
     }
 }
 

@@ -34,6 +34,33 @@ export namespace Sudoku {
             this.nRange = ArrayUtils.range(0, this.n)
             this.n2Range = ArrayUtils.range(0, this.n2)
         }
+
+        indexToCoord(a: IndexN4): Coord {
+            return {
+                x: a % this.n2,
+                y: Math.floor(a/this.n2)
+            }
+        }
+
+        isSameColumn(a : IndexN4 | Coord, b: IndexN4 | Coord) {
+            if(typeof a === 'number') a = this.indexToCoord(a)
+            if(typeof b === 'number') b = this.indexToCoord(b)
+            
+            return a.x == b.x
+        }
+
+        isSameRow(a: IndexN4 | Coord, b: IndexN4 | Coord): boolean {
+            if(typeof a === 'number') a = this.indexToCoord(a)
+            if(typeof b === 'number') b = this.indexToCoord(b)
+
+            return a.y == b.y
+        }
+
+        isSameBlock(a: IndexN4 | Coord, b: IndexN4 | Coord): boolean {
+            if(typeof a === 'number') a = this.indexToCoord(a)
+            if(typeof b === 'number') b = this.indexToCoord(b)
+            return Math.floor(a.x/this.n) == Math.floor(b.x/this.n) && Math.floor(a.y/this.n) == Math.floor(b.y/this.n)
+        }
     }
 
     export interface Coord {

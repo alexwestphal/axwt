@@ -344,7 +344,7 @@ export namespace Sudoku {
             }))
         }
 
-        updateCell(x: number, y: number, update: Partial<Cell> | ((cell: Cell) => Partial<Cell>)): Sudoku.Board {
+        private updateCell(x: number, y: number, update: Partial<Cell> | ((cell: Cell) => Partial<Cell>)): Sudoku.Board {
             return this.updateCells(cells => {
                 let cellIndex = x + y * this.n2
                 let cell = cells[cellIndex]
@@ -355,7 +355,7 @@ export namespace Sudoku {
             })
         }
 
-        updateCells(mutate: (cells: Cell[]) => void): Sudoku.Board {
+        private updateCells(mutate: (cells: Cell[]) => void): Sudoku.Board {
 
             let cells = [...this.cells]
             mutate(cells)

@@ -3,6 +3,10 @@ import {Sudoku} from '../data'
 import {SearchTechnique, SearchResult} from './SearchTechnique'
 
 
+/**
+ * A Hidden-Single is where a particular candidate only appears once in a house. We thus know that it is the correct
+ * value for that cell.
+ */
 export class HiddenSingleTechnique implements SearchTechnique {
 
     find(board: Sudoku.Board): SearchResult | null {

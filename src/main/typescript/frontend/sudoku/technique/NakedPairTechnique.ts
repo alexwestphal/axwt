@@ -4,17 +4,21 @@ import {ArrayUtils} from '@axwt/util'
 import {Sudoku} from '../data'
 import {SearchTechnique, SearchResult, CandidateClearances} from './SearchTechnique'
 
-
+/**
+ * A Naked-Pair involves two cells (in the same house) that have exactly 2 candidates and which are the same candidates
+ * between the two cells. We can deduce that those two values must occur in those two cells and therefore can be
+ * removed as candidates from the rest of the house.
+ */
 export class NakedPairTechnique implements SearchTechnique {
 
     find(board: Sudoku.Board): SearchResult | null {
 
         for(let house of board.getAllHouses()) {
-            for(let i=0; i<board.n2-1;i++) {
+            for(let i = 0; i < board.n2 - 1; i++) {
                 let cellA = house.cells[i]
                 if(cellA.candidates.length == 2) {
-                    // Potential a naked pair
-                    for(let j=i+1; j<board.n2; j++) {
+                    // Half a pair
+                    for(let j= i+1; j < board.n2; j++) {
                         let cellB = house.cells[j]
                         if(ArrayUtils.equals(cellA.candidates, cellB.candidates)) {
                             // Naked pair found

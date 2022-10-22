@@ -2,7 +2,9 @@
 import {Sudoku} from '../data'
 import {SearchTechnique, SearchResult} from './SearchTechnique'
 
-
+/**
+ * A Naked-Single is a cell with a single remaining candidate. We thus know that it is the value for that cell.
+ */
 export class NakedSingleTechnique implements SearchTechnique {
 
     find(board: Sudoku.Board): SearchResult | null {

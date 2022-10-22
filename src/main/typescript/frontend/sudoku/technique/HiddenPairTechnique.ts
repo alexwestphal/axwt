@@ -4,6 +4,11 @@ import {ArrayUtils} from '@axwt/util'
 import {Sudoku} from '../data'
 import {SearchTechnique, SearchResult, CandidateClearances} from './SearchTechnique'
 
+/**
+ * A Hidden-Pair involves two candidates that only appear twice (in a particular house) and where their two occurrences
+ * are the same two cells. We can deduce that those two values must appear in those two cells and thus all other
+ * candidates can be removed from those cells.
+ */
 export class HiddenPairTechnique implements SearchTechnique {
 
     find(board: Sudoku.Board): SearchResult | null {

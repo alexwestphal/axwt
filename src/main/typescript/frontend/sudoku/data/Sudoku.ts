@@ -10,29 +10,23 @@ export namespace Sudoku {
         readonly n4: Sudoku.Size
         readonly cells: ReadonlyArray<Cell>
 
-        readonly version: number
         readonly availableCandidates: ReadonlyArray<Sudoku.Value>
-        readonly nRange: ReadonlyArray<IndexN>
-        readonly n2Range: ReadonlyArray<IndexN2>
 
-        constructor(n: number, version: number = 1, cells: ReadonlyArray<Cell> = null) {
+        constructor(n: number, cells: ReadonlyArray<Cell> = null) {
             this.n = n
             this.n2 = n * n
             this.n4 = n * n * n * n
             this.cells = cells || ArrayUtils.range(0, this.n4).map(index => ({
                 index,
                 x: index % this.n2,
-                y: Math.floor(index/this.n2),
+                y: Math.floor(index / this.n2),
                 value: 0,
                 valueType: 'None',
                 candidates: [],
                 conflicts: []
             }))
 
-            this.version = version
-            this.availableCandidates = ArrayUtils.range(1, this.n2+1)
-            this.nRange = ArrayUtils.range(0, this.n)
-            this.n2Range = ArrayUtils.range(0, this.n2)
+            this.availableCandidates = ArrayUtils.range(1, this.n2 + 1)
         }
 
         // Caching
@@ -40,15 +34,15 @@ export namespace Sudoku {
         private _cache: Map<string, any> = new Map()
 
         cache<T>(key: string, produce: () => T): T {
-            if(this._cache.has(key)) return this._cache.get(key)
+            if (this._cache.has(key)) return this._cache.get(key)
             else {
                 let value = produce()
                 this._cache.set(key, value)
                 return value
             }
-    
+
         }
-        
+
 
         // Conversions
 
@@ -59,87 +53,326 @@ export namespace Sudoku {
         indexToCoord(a: IndexN4): Coord {
             return {
                 x: a % this.n2,
-                y: Math.floor(a/this.n2)
+                y: Math.floor(a / this.n2)
             }
         }
 
 
         // Structure checking
 
+        checkGuess(x: IndexN2, y: IndexN2, value: Value): boolean {
+
+            // Check rest of row
+            for (let tx=0; tx<this.n2; tx++) {
+                if (tx != x && this.getCell(tx, y).value == value) return false
+            }
+            // Check rest of column
+            for (let ty=0; ty<this.n2; ty++) {
+                if (ty != y && this.getCell(x, ty).value == value) return false
+            }
+
+            // Check rest of block
+            let {sx, sy} = this.whichBlock(x, y)
+            for (let yi=0; yi<this.n; yi++) {
+                for (let xi=0; xi<this.n; xi++) {
+                    let tx = sx * this.n + xi
+                    let ty = sy * this.n + yi
+                    if (tx != x && ty != y && this.getCell(tx, ty).value == value) return false
+                }
+            }
+
+            return true
+        }
+
         isSameBlock(a: IndexN4 | Coord, b: IndexN4 | Coord): boolean {
-            if(typeof a === 'number') a = this.indexToCoord(a)
-            if(typeof b === 'number') b = this.indexToCoord(b)
-            return Math.floor(a.x/this.n) == Math.floor(b.x/this.n) && Math.floor(a.y/this.n) == Math.floor(b.y/this.n)
+            if (typeof a === 'number') a = this.indexToCoord(a)
+            if (typeof b === 'number') b = this.indexToCoord(b)
+            let sa = this.whichBlock(a.x, a.y)
+            let sb = this.whichBlock(b.x, b.y)
+            return sa.sx == sb.sx && sa.sy == sb.sy
         }
 
         isSameCell(a: IndexN4 | Coord, b: IndexN4 | Coord) {
-            if(typeof a !== 'number') {
-                a = a.x + a.y * this.n2
-            }
-            if(typeof b !== 'number') {
-                b = b.x +b.y * this.n2
-            }
+            if (typeof a !== 'number') a = a.x + a.y * this.n2
+            if (typeof b !== 'number') b = b.x + b.y * this.n2
             return a == b
         }
 
-        isSameColumn(a : IndexN4 | Coord, b: IndexN4 | Coord) {
-            if(typeof a === 'number') a = this.indexToCoord(a)
-            if(typeof b === 'number') b = this.indexToCoord(b)
-            
+        isSameColumn(a: IndexN4 | Coord, b: IndexN4 | Coord) {
+            if (typeof a === 'number') a = this.indexToCoord(a)
+            if (typeof b === 'number') b = this.indexToCoord(b)
+
             return a.x == b.x
         }
 
         isSameRow(a: IndexN4 | Coord, b: IndexN4 | Coord): boolean {
-            if(typeof a === 'number') a = this.indexToCoord(a)
-            if(typeof b === 'number') b = this.indexToCoord(b)
+            if (typeof a === 'number') a = this.indexToCoord(a)
+            if (typeof b === 'number') b = this.indexToCoord(b)
 
             return a.y == b.y
         }
 
-        whichBlock(x: IndexN2, y: IndexN2): { blockX: IndexN, blockY: IndexN } {
-            return { blockX: Math.floor(x/this.n), blockY: Math.floor(y/this.n) }
+        whichBlock(x: IndexN2, y: IndexN2): { sx: IndexN, sy: IndexN } {
+            return {sx: Math.floor(x / this.n), sy: Math.floor(y / this.n)}
+        }
+
+
+        // Accessors
+
+
+        getAllHouses(): ReadonlyArray<Sudoku.House> {
+            return this.cache("getAllHouses", () => [...this.getBlocks(), ...this.getColumns(), ...this.getRows()])
+        }
+
+        getBlock(sx: number, sy: number): Sudoku.Block {
+            let cells = new Array<Sudoku.Cell>(this.n2)
+            for (let yi = 0; yi < this.n; yi++) {
+                for (let xi = 0; xi < this.n; xi++) {
+                    let x = sx * this.n + xi
+                    let y = sy * this.n + yi
+                    cells[xi + yi * this.n] = this.getCell(x, y)
+                }
+            }
+            return new Sudoku.Block(sx, sy, cells)
+        }
+
+        getBlocks(): ReadonlyArray<Sudoku.Block> {
+            return this.cache("getBlocks", () => {
+                let blocks = new Array<Sudoku.Block>(this.n2)
+
+                for (let sy = 0; sy < this.n; sy++) {
+                    for (let sx = 0; sx < this.n; sx++) {
+                        blocks[sx + sy * this.n] = this.getBlock(sx, sy)
+                    }
+                }
+                return blocks
+
+            })
+        }
+
+
+        getCandidatesInHouse(house: House): CandidateWithOccurrences[] {
+            return this.cache(`getCandidatesInHouse-${house.houseId}`, () => {
+                let result: CandidateWithOccurrences[] = this.availableCandidates.map(candidate => ({
+                    candidate, occurrences: []
+                }))
+
+                for (let cell of house.cells) {
+                    for (let candidate of cell.candidates) {
+                        result[candidate - 1].occurrences.push(cell.index)
+                    }
+                }
+
+                return result
+            })
+        }
+
+        getCell(x: IndexN2, y: IndexN2): Cell {
+            return this.cells[x + y * this.n2]
+        }
+
+        getColumn(x: IndexN2): Sudoku.Column {
+            let cells = new Array<Sudoku.Cell>(this.n2)
+            for (let y = 0; y < this.n2; y++) cells[y] = this.getCell(x, y)
+            return new Sudoku.Column(x, cells)
+        }
+
+        getColumns(): ReadonlyArray<Sudoku.Column> {
+            return this.cache("getColumns", () => {
+                let columns = new Array<Sudoku.Column>(this.n2)
+                for(let x = 0; x < this.n2; x++) columns[x] = this.getColumn(x)
+                return columns
+
+            })
+        }
+
+        getRow(y: IndexN2): Sudoku.Row {
+            let cells = new Array<Sudoku.Cell>(this.n2)
+            for (let x=0; x < this.n2; x++) cells[x] = this.getCell(x, y)
+            return new Sudoku.Row(y, cells)
+        }
+
+        getRows(): ReadonlyArray<Row> {
+            return this.cache("getRows", () => {
+                let rows = new Array<Sudoku.Row>(this.n2)
+                for(let y = 0; y < this.n2; y++) rows[y] = this.getRow(y)
+                return rows
+            })
+        }
+
+
+        // Board Manipulation
+
+        /**
+         * Calculate the candidates for all currently empty cells
+         */
+        calculateCandidates(): Sudoku.Board {
+            return this.updateCells(cells => {
+
+                for(let y = 0; y < this.n2; y++) {
+                    for(let x = 0; x < this.n2; x++) {
+                        let cellIndex = x + y * this.n2
+                        let cell = cells[cellIndex]
+                        if(cell.valueType == 'None') {
+                            let candidates = ArrayUtils.range(1, this.n2+1)
+
+                            // Scan for values already in row
+                            for (let tx = 0; tx < this.n2; tx++) {
+                                let otherCell = this.getCell(tx, y)
+                                if (otherCell.value > 0) ArrayUtils.remove(candidates, otherCell.value)
+                            }
+                            // Scan for values already in column
+                            for (let ty = 0; ty < this.n2; ty++) {
+                                let otherCell = this.getCell(x, ty)
+                                if (otherCell.value > 0) ArrayUtils.remove(candidates, otherCell.value)
+                            }
+                            // Scan for values already in block
+                            let { sx, sy } = this.whichBlock(x, y)
+                            for (let yi=0; yi<this.n; yi++) {
+                                for (let xi=0; xi<this.n; xi++) {
+                                    let tx = sx * this.n + xi
+                                    let ty = sy * this.n + yi
+                                    let otherCell = this.getCell(tx, ty)
+                                    if (otherCell.value > 0) ArrayUtils.remove(candidates, otherCell.value)
+                                }
+                            }
+
+                            cells[cellIndex] = { ...cell, candidates: candidates }
+                        } else if(cell.candidates == null) {
+                            cells[cellIndex] = { ...cell, candidates: [] }
+                        }
+                    }
+                }
+            })
+        }
+
+        clearCell(x: IndexN2, y: IndexN2, checkConflicts: boolean = true): Sudoku.Board {
+            if(checkConflicts) {
+                return this.updateCells(cells => {
+                    let cellIndex = x + y * this.n2
+                    let cell = cells[cellIndex]
+                    cells[cellIndex] = { ...cell, value: 0, valueType: 'None', candidates: [], conflicts: []}
+
+                    // Clear the conflicts from the other cells
+                    for(let ci of cell.conflicts) {
+                        let otherCell = cells[ci]
+                        let conflicts = otherCell.conflicts.filter(c => c != cellIndex)
+                        let valueType = otherCell.valueType
+                        if(conflicts.length == 0) {
+                            if(valueType == 'Known-Conflict') valueType = 'Known'
+                            else if(valueType == 'User-Conflict') valueType = 'User'
+                        }
+                        cells[ci] = { ...otherCell, conflicts, valueType }
+                    }
+                })
+            } else {
+                return this.updateCell(x, y, { value: 0, valueType: 'None', candidates: [] })
+            }
+        }
+
+        clearCandidates(): Sudoku.Board {
+            return this.updateCells(cells => {
+                for(let cell of cells) {
+                    if(cell.candidates.length > 0) {
+                        cells[cell.index] = { ...cell, candidates: [] }
+                    }
+                }
+            })
+        }
+
+        setCellCandidates(x: IndexN2, y: IndexN2, candidates: ReadonlyArray<Value>): Sudoku.Board {
+            return this.updateCell(x, y, {candidates})
+        }
+
+        setCellValueUser(x: IndexN2, y: IndexN2, value: Value): Sudoku.Board {
+            let cellIndex = x + y * this.n2
+            let cell = this.cells[cellIndex]
+
+            if(value == cell.value) return this // Answer hasn't changed
+
+            let board1 = this.clearCell(x, y, true)
+
+
+            return board1.updateCells(cells => {
+                cell = cells[cellIndex]
+                let conflicts: IndexN4[] = []
+
+                // Scan for conflicts and clear candidates
+                let {sx, sy} = this.whichBlock(x, y)
+                let cellsToCheck = [
+                    ...board1.getRow(y).cells.filter(c => c.x != x),
+                    ...board1.getColumn(x).cells.filter(c => c.y != y),
+                    ...board1.getBlock(sx, sy).cells.filter(c => c.x != x && c.y != y)
+                ]
+                for(let otherCell of cellsToCheck) {
+                    if(value == otherCell.value) {
+                        conflicts.push(otherCell.index)
+
+                        cells[otherCell.index] = { ...otherCell,
+                            conflicts: [...otherCell.conflicts, cellIndex],
+                            valueType: otherCell.valueType == 'Known' ? 'Known-Conflict' : 'User-Conflict',
+                            candidates: otherCell.candidates.filter(i => i != cellIndex)
+                        }
+                    } else if(otherCell.candidates.length > 0) {
+                        cells[otherCell.index] = { ...otherCell, candidates: otherCell.candidates.filter(n => n != value) }
+                    }
+                }
+
+                // Update the current cell
+                cells[cellIndex] = { ...cell,
+                    value,
+                    valueType: conflicts.length > 0 ? 'User-Conflict' : 'User',
+                    conflicts
+                }
+            })
+        }
+
+
+
+        setCellValueGuess(x: IndexN2, y: IndexN2, value: Value, valid: boolean = true): Sudoku.Board {
+            return this.updateCell(x, y, (cell) => ({value, valueType: valid ? 'Guess' : 'Guess-Conflict'}))
+        }
+
+        setCellValueKnown(x: number, y: number, value: Value): Sudoku.Board {
+            return this.updateCell(x, y, (cell) => ({ value, valueType: 'Known' }))
+        }
+
+
+        toggleCellCandidate(x: number, y: number, candidate: Value): Sudoku.Board {
+            return this.updateCell(x, y, (cell) => ({
+                candidates: cell.candidates.includes(candidate) ? cell.candidates.filter(n => n != candidate) : [...cell.candidates, candidate]
+            }))
+        }
+
+        updateCell(x: number, y: number, update: Partial<Cell> | ((cell: Cell) => Partial<Cell>)): Sudoku.Board {
+            return this.updateCells(cells => {
+                let cellIndex = x + y * this.n2
+                let cell = cells[cellIndex]
+
+                let partial = update instanceof Function ? update(cell) : update
+
+                cells[cellIndex] = {...cell, ...partial}
+            })
+        }
+
+        updateCells(mutate: (cells: Cell[]) => void): Sudoku.Board {
+
+            let cells = [...this.cells]
+            mutate(cells)
+
+            return new Board(this.n, cells)
+        }
+
+        withGuesses(guesses: number[]): Sudoku.Board {
+
+            let cells: ReadonlyArray<Sudoku.Cell> = this.cells.map((cell, cellIndex) =>
+                cell.valueType == 'Known' ? cell : { ...cell, value: guesses[cellIndex], valueType: 'Guess' }
+            )
+
+            return new Board(this.n, cells)
         }
     }
 
-    export interface Coord {
-        readonly x: IndexN2
-        readonly y: IndexN2
-    }
-
-    export type CellValueType = 'None' | 'Known' | 'Known-Conflict' | 'User' | 'User-Conflict' | 'Guess' | 'Guess-Conflict'
-
-    export interface Cell extends Coord {
-        readonly index: Sudoku.IndexN4
-
-        readonly value: Sudoku.Value
-        readonly valueType: CellValueType
-        readonly candidates: ReadonlyArray<Sudoku.Value>
-        readonly conflicts: ReadonlyArray<Sudoku.IndexN4>
-    }
-
-    export interface HouseBase {
-        readonly houseType: 'Column' | 'Row' | 'Block'
-        readonly houseId: string
-    }
-
-    export interface Column extends HouseBase {
-        readonly houseType: 'Column'
-        readonly x: IndexN2
-    }
-
-    export interface Row extends HouseBase {
-        readonly houseType: 'Row'
-        readonly y: IndexN2
-    }
-
-    export interface Block extends HouseBase {
-        readonly houseType: 'Block'
-        readonly bx: IndexN
-        readonly by: IndexN
-    }
-
-    export type House = Column | Row | Block
-    export type HouseWithCells = House & { cells: ReadonlyArray<Sudoku.Cell>  }
 
     /**
      * Index in the range 0 to n
@@ -167,280 +400,83 @@ export namespace Sudoku {
      */
     export type Value = number
 
-
-    // Board Creation
-
-    export const fromValues = (blockSize: Sudoku.Size, values: Sudoku.Value[]): Sudoku.Board => {
-        let n = blockSize, n2 = n*n, n4 = n2*n2
-        if(n4 != values.length) throw new Error(`values.length (${values.length}) should be boardSize^4 (${n4})`)
-
-        return updateCells(new Board(blockSize), cells => {
-            for(let i=0; i<n4; i++) {
-                cells[i] = { ...cells[i],
-                    value: values[i] || 0,
-                    valueType: values[i] > 0 ? 'Known' : 'None'
-                }
-            }
-        })
+    export interface Coord {
+        readonly x: IndexN2
+        readonly y: IndexN2
     }
 
-    // Accessors
+    export type CellValueType = 'None' | 'Known' | 'Known-Conflict' | 'User' | 'User-Conflict' | 'Guess' | 'Guess-Conflict'
 
-    export const checkGuess = (board: Sudoku.Board, x: IndexN2, y: IndexN2, value: Value): boolean => {
+    export interface Cell extends Coord {
+        readonly index: Sudoku.IndexN4
 
-        // Check rest of row
-        for(let tx of board.n2Range) {
-            if(tx != x && board.cells[tx + y * board.n2].value == value) return false
-        }
-        // Check rest of column
-        for(let ty of board.n2Range) {
-            if(ty != y && board.cells[x + ty * board.n2].value == value) return false
-        }
-
-        // Check rest of block
-        let { blockX, blockY } = board.whichBlock(x, y)
-        for(let i of board.nRange) {
-            for(let j of board.nRange) {
-                let tx = blockX * board.n + j
-                let ty = blockY * board.n + i
-                if(tx != x && ty != y && board.cells[tx + ty * board.n2].value == value) return false
-            }
-        }
-
-        return true
+        readonly value: Sudoku.Value
+        readonly valueType: CellValueType
+        readonly candidates: ReadonlyArray<Sudoku.Value>
+        readonly conflicts: ReadonlyArray<Sudoku.IndexN4>
     }
 
-    export const getAllHouses = (board: Sudoku.Board): HouseWithCells[] =>
-        board.cache("getAllHouses", () => [...getBlocks(board), ...getColumns(board), ...getRows(board)])
+    export abstract class House {
+        readonly houseType: 'Column' | 'Row' | 'Block'
+        readonly houseId: string
 
-    export const getBlock = (board: Sudoku.Board, bx: number, by: number): ReadonlyArray<Sudoku.Cell> => {
-        let house = new Array<Sudoku.Cell>(board.n2)
-        for(let yi of board.nRange) {
-            for(let xi of board.nRange) {
-                let x = bx * board.n + xi
-                let y = by * board.n + yi
-                house[xi + yi * board.n] = board.cells[x + y * board.n2]
-            }
+        readonly cells: ReadonlyArray<Sudoku.Cell>
+
+        protected constructor(houseId: string, cells: ReadonlyArray<Sudoku.Cell>) {
+            this.houseId = houseId
+            this.cells = cells
         }
-        return house
+
+        contains(cell: Sudoku.Cell): boolean {
+            for(let cellB of this.cells) {
+                if(cell.index == cellB.index) return true
+            }
+            return false
+        }
+
+        isBlock(): this is Block { return this.houseType == 'Block'}
+        isColumn(): this is Column { return this.houseType == 'Column' }
+        isRow(): this is Row { return this.houseType == 'Row' }
     }
 
-    export const getBlocks = (board: Sudoku.Board): (Sudoku.Block & { cells: ReadonlyArray<Sudoku.Cell> })[] =>
-        board.cache("getBlocks", () =>
-            board.nRange.map(i => {
-                let bx = i % board.n
-                let by = Math.floor(i/board.n)
-                return { houseType: 'Block', houseId: `Block-${bx}-${by}`, bx, by, cells: getBlock(board, bx, by) }
-            })
-        )
+    export class Block extends House {
+        readonly houseType = 'Block'
+        readonly sx: IndexN
+        readonly sy: IndexN
+
+        constructor(bx: IndexN, by: IndexN, cells: ReadonlyArray<Sudoku.Cell>) {
+            super(`Block-${bx}-${by}`, cells)
+            this.sx = bx
+            this.sy = by
+        }
+    }
+
+    export class Column extends House {
+        readonly houseType = 'Column'
+        readonly x: IndexN2
+
+        constructor(x: IndexN2, cells: ReadonlyArray<Sudoku.Cell>) {
+            super(`Column-${x}`, cells)
+            this.x = x
+        }
+    }
+
+    export class Row extends House {
+        readonly houseType = 'Row'
+        readonly y: IndexN2
+
+        constructor(y: IndexN2, cells: ReadonlyArray<Sudoku.Cell>) {
+            super(`Row-${y}`, cells)
+            this.y = y
+        }
+    }
+
+
+
 
     export interface CandidateWithOccurrences {
         readonly candidate: Value
         readonly occurrences: IndexN4[]
-    }
-
-    export const getCandidatesInHouse = (board: Sudoku.Board, house: HouseWithCells): CandidateWithOccurrences[] =>
-        cache(board, `getCandidatesInHouse-${house.houseId}`, () => {
-            let result: CandidateWithOccurrences[] = board.availableCandidates.map(candidate => ({
-                candidate, occurrences: []
-            }))
-
-            for (let cell of  house.cells) {
-                for (let candidate of cell.candidates) {
-                    result[candidate - 1].occurrences.push(cell.index)
-                }
-            }
-
-            return result
-        })
-
-    export const getCell = (board: Sudoku.Board, x: IndexN2, y: IndexN2): Cell => board.cells[x + y * board.n2]
-
-    export const getColumn = (board: Sudoku.Board, x: IndexN2): ReadonlyArray<Sudoku.Cell> => {
-        let column = new Array<Sudoku.Cell>(board.n2)
-        for(let y of board.n2Range) column[y] = board.cells[x + y * board.n2]
-        return column
-    }
-
-    export const getColumns = (board: Sudoku.Board): (Sudoku.Column & { cells: ReadonlyArray<Sudoku.Cell> })[] =>
-        board.cache("getColumns", () =>
-            board.n2Range.map(x => ({ houseType: 'Column', houseId: `Column-${x}`, x, cells: getColumn(board, x) }))
-        )
-
-    export const getRow = (board: Sudoku.Board, y: IndexN2): ReadonlyArray<Sudoku.Cell> => {
-        let row = new Array<Sudoku.Cell>(board.n2)
-        for(let x of board.n2Range) row[x] = board.cells[x + y * board.n2]
-        return row
-    }
-
-    export const getRows = (board: Sudoku.Board): (Sudoku.Row & { cells: ReadonlyArray<Sudoku.Cell> })[] =>
-        cache(board, "getRows", () =>
-            board.n2Range.map(y => ({ houseType: 'Row', houseId: `Row-${y}`, y,  cells: getRow(board, y) }))
-        )
-
-
-
-    // Board Manipulation
-
-    /**
-     * Calculate the candidates for all currently empty cells
-     * @param board
-     */
-    export const calculateCandidates = (board: Sudoku.Board): Sudoku.Board => updateCells(board, cells => {
-
-        for(let y of board.n2Range) {
-            for(let x of board.n2Range) {
-                let cellIndex = x + y * board.n2
-                let cell = cells[cellIndex]
-                if(cell.valueType == 'None') {
-                    let candidates = ArrayUtils.range(1, board.n2 + 1)
-
-                    // Scan for values already in row
-                    for (let xi of board.n2Range) {
-                        let otherCell = cells[xi + y * board.n2]
-                        if (otherCell.value > 0) ArrayUtils.remove(candidates, otherCell.value)
-                    }
-                    // Scan for values already in column
-                    for (let yi of board.n2Range) {
-                        let otherCell = cells[x + yi * board.n2]
-                        if (otherCell.value > 0) ArrayUtils.remove(candidates, otherCell.value)
-                    }
-                    // Scan for values already in block
-                    let { blockX, blockY } = board.whichBlock(x, y)
-                    for (let yi of board.nRange) {
-                        for (let xi of board.nRange) {
-                            let tx = blockX * board.n + xi
-                            let ty = blockY * board.n + yi
-                            let otherCell = board.cells[tx + ty * board.n2]
-                            if (otherCell.value > 0) ArrayUtils.remove(candidates, otherCell.value)
-                        }
-                    }
-
-                    cells[cellIndex] = { ...cell, candidates: candidates }
-                } else if(cell.candidates == null) {
-                    cells[cellIndex] = { ...cell, candidates: [] }
-                }
-            }
-        }
-    })
-
-    export const clearCell = (board: Sudoku.Board, x: IndexN2, y: IndexN2, checkConflicts: boolean = true): Sudoku.Board => {
-        if(checkConflicts) {
-            return updateCells(board, cells => {
-                let cellIndex = x + y * board.n2
-                let cell = cells[cellIndex]
-                cells[cellIndex] = { ...cell, value: 0, valueType: 'None', candidates: [], conflicts: []}
-
-                // Clear the conflicts from the other cells
-                for(let ci of cell.conflicts) {
-                    let otherCell = cells[ci]
-                    let conflicts = otherCell.conflicts.filter(c => c != cellIndex)
-                    let valueType = otherCell.valueType
-                    if(conflicts.length == 0) {
-                        if(valueType == 'Known-Conflict') valueType = 'Known'
-                        else if(valueType == 'User-Conflict') valueType = 'User'
-                    }
-                    cells[ci] = { ...otherCell, conflicts, valueType }
-                }
-            })
-        } else {
-            return updateCell(board, x, y, { value: 0, valueType: 'None', candidates: [] })
-        }
-    }
-
-    export const clearCandidates = (board: Sudoku.Board): Sudoku.Board => {
-        return updateCells(board, cells => {
-            for(let cell of cells) {
-                if(cell.candidates.length > 0) {
-                    cells[cell.index] = { ...cell, candidates: [] }
-                }
-            }
-        })
-    }
-
-    export const setCellCandidates = (board: Sudoku.Board, x: IndexN2, y: IndexN2, candidates: ReadonlyArray<Value>): Sudoku.Board =>
-        updateCell(board, x, y, { candidates })
-
-    export const setCellValueUser = (board: Sudoku.Board, x: IndexN2, y: IndexN2, value: Value): Sudoku.Board => {
-        let cellIndex = x + y * board.n2
-        let cell = board.cells[cellIndex]
-
-        if(value == cell.value) return board // Answer hasn't changed
-
-        let board1 = clearCell(board, x, y, true)
-
-
-        return updateCells(board1, cells => {
-            cell = cells[cellIndex]
-            let conflicts: IndexN4[] = []
-
-            // Scan for conflicts and clear candidates
-            let cellsToCheck = [
-                ...getRow(board1, y).filter(c => c.x != x),
-                ...getColumn(board1, x).filter(c => c.y != y),
-                ...getBlock(board1, Math.floor(x/board.n), Math.floor(y/board.n)).filter(c => c.x != x && c.y != y)
-            ]
-            for(let otherCell of cellsToCheck) {
-                if(value == otherCell.value) {
-                    conflicts.push(otherCell.index)
-
-                    cells[otherCell.index] = { ...otherCell,
-                        conflicts: [...otherCell.conflicts, cellIndex],
-                        valueType: otherCell.valueType == 'Known' ? 'Known-Conflict' : 'User-Conflict',
-                        candidates: otherCell.candidates.filter(i => i != cellIndex)
-                    }
-                } else if(otherCell.candidates.length > 0) {
-                    cells[otherCell.index] = { ...otherCell, candidates: otherCell.candidates.filter(n => n != value) }
-                }
-            }
-
-            // Update the current cell
-            cells[cellIndex] = { ...cell,
-                value,
-                valueType: conflicts.length > 0 ? 'User-Conflict' : 'User',
-                conflicts
-            }
-        })
-    }
-
-
-
-    export const setCellValueGuess = (board: Sudoku.Board, x: IndexN2, y: IndexN2, value: Value, valid: boolean = true): Sudoku.Board =>
-        updateCell(board, x, y, (cell) => ({ value, valueType: valid ? 'Guess' : 'Guess-Conflict' }))
-
-    export const setCellValueKnown = (board: Sudoku.Board, x: number, y: number, value: Value): Sudoku.Board =>
-        updateCell(board, x, y, (cell) => ({ value, valueType: 'Known' }))
-
-    export const toggleCellCandidate = (board: Sudoku.Board, x: number, y: number, candidate: Value): Sudoku.Board =>
-        updateCell(board, x, y, (cell) => ({
-            candidates: cell.candidates.includes(candidate) ? cell.candidates.filter(n => n != candidate) : [...cell.candidates, candidate]
-        }))
-
-    const updateCell = (board: Sudoku.Board, x: number, y: number, update: Partial<Cell> | ((cell: Cell) => Partial<Cell>)): Sudoku.Board =>
-        updateCells(board, cells => {
-            let cellIndex = x + y * board.n2
-            let cell = cells[cellIndex]
-
-            let partial = update instanceof Function ? update(cell) : update
-
-            cells[cellIndex] = { ...cell, ...partial }
-        })
-
-    const updateCells = (board: Sudoku.Board, mutate: (cells: Cell[]) => void): Sudoku.Board => {
-
-        let cells = [...board.cells]
-        mutate(cells)
-
-        return new Board(board.n, board.version+1, cells)
-    }
-
-    export const withGuesses = (board: Sudoku.Board, guesses: number[]): Sudoku.Board => {
-
-        let cells: ReadonlyArray<Sudoku.Cell> = board.cells.map((cell, cellIndex) =>
-            cell.valueType == 'Known' ? cell : { ...cell, value: guesses[cellIndex], valueType: 'Guess' }
-        )
-
-        return new Board(board.n, board.version+1, cells)
     }
 }
 

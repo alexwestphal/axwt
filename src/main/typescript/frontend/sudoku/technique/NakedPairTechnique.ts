@@ -9,17 +9,17 @@ export class NakedPairTechnique implements SearchTechnique {
 
     find(board: Sudoku.Board): SearchResult | null {
 
-        for(let {cells, ...house} of Sudoku.getAllHouses(board)) {
+        for(let house of board.getAllHouses()) {
             for(let i=0; i<board.n2-1;i++) {
-                let cellA = cells[i]
+                let cellA = house.cells[i]
                 if(cellA.candidates.length == 2) {
                     // Potential a naked pair
                     for(let j=i+1; j<board.n2; j++) {
-                        let cellB = cells[j]
+                        let cellB = house.cells[j]
                         if(ArrayUtils.equals(cellA.candidates, cellB.candidates)) {
                             // Naked pair found
 
-                            let candidateClearances: CandidateClearances[] = cells
+                            let candidateClearances: CandidateClearances[] = house.cells
                                 .filter(cell => cell.index != cellA.index && cell.index != cellB.index)
                                 .map(cell => ({
                                     x: cell.x, y: cell.y,

@@ -85,7 +85,7 @@ export namespace PlayActions {
     export const generateCandidates = (): SU.ThunkAction<Sudoku.Board> =>
         (dispatch, getState) => {
             let board = selectCurrentPlayBoard(getState())
-            let updatedBoard = Sudoku.calculateCandidates(board)
+            let updatedBoard = board.calculateCandidates()
 
             dispatch(createAction('su/play/generateNotes', updatedBoard))
 

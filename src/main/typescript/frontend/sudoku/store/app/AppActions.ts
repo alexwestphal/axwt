@@ -1,14 +1,13 @@
 
 import {Action, createAction} from '@axwt/core'
 
-import {AppMode} from '../../data'
+import {AppMode, Sudoku} from '../../data'
 
-import {BoardState} from '../board'
 import * as SU from '../SU'
 
 export namespace AppActions {
 
-    export type LoadQuickSave = Action<'su/app/loadQuickSave', { board: BoardState }>
+    export type LoadQuickSave = Action<'su/app/loadQuickSave', { board: Sudoku.Board }>
 
     export type QuickSave = Action<'su/app/quickSave'>
 
@@ -19,17 +18,20 @@ export namespace AppActions {
 
     export const loadQuickSave = (): SU.ThunkAction =>
         (dispatch) => {
-            let json = localStorage.getItem("AXWT-SU-QUICKSAVE")
-            if(json != null) {
-                dispatch(createAction('su/app/loadQuickSave', JSON.parse(json)))
+            let jsonString = localStorage.getItem("AXWT-SU-QUICKSAVE")
+            if(jsonString != null) {
+                let json = JSON.parse(jsonString)
+                let board = new Sudoku.Board(json.n, json.cells)
+                dispatch(createAction('su/app/loadQuickSave', { board }))
             }
         }
 
     export const quickSave = (): SU.ThunkAction =>
         (dispatch, getState) => {
             let state = getState()
+            let board = state.su.board.current
 
-            let json = JSON.stringify({ board: state.su.board })
+            let json = JSON.stringify({ n: board.n, cells: board.cells })
             localStorage.setItem("AXWT-SU-QUICKSAVE", json)
         }
 

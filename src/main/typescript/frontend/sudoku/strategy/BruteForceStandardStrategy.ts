@@ -83,7 +83,7 @@ export class BruteForceStandardStrategy implements Strategy {
             }
         }
 
-        let solution = Sudoku.withGuesses(board, values)
+        let solution = board.withGuesses(values)
 
         let endTime = Date.now()
         let timeTaken = endTime - startTime

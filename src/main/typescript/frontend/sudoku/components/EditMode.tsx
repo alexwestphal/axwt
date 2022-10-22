@@ -16,7 +16,7 @@ import {mainPanelClasses} from './MainPanel'
 
 const EditMode: React.FC = () => {
 
-    const board = useTypedSelector(selectEditBoard, (left, right) => left.version == right.version)
+    const board = useTypedSelector(selectEditBoard)
 
     const dispatch = useThunkDispatch()
 
@@ -50,7 +50,7 @@ const EditMode: React.FC = () => {
                 if(y > 0) setActiveCellCoord({ x: x, y: y-1})
                 break
             case 'Backspace': {
-                let activeCell = Sudoku.getCell(board, x, y)
+                let activeCell = board.getCell(x, y)
                 if(activeCell.value > 0) {
                     dispatch(BoardActions.clearCellValue(x, y))
                 }
@@ -66,7 +66,7 @@ const EditMode: React.FC = () => {
                     key={`cell-${cell.x}-${cell.y}`}
                     n={board.n} x={cell.x} y={cell.y}
                     value={cell.value}
-                    highlight={activeCellCoord != null && Sudoku.isSameCell(board, cell, activeCellCoord) ? 'active' : 'none'}
+                    highlight={activeCellCoord != null && board.isSameCell(cell, activeCellCoord) ? 'active' : 'none'}
                 />
             )}
         </SudokuBoard>

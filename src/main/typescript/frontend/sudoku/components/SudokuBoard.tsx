@@ -271,23 +271,16 @@ interface HighlightHouseProps {
 
 export const HighlightHouse: React.FC<HighlightHouseProps> = ({n, house}) => {
     let props = { x: 0, y: 0, width: 100, height: 100 }
-    switch (house.houseType) {
-        case 'Column': {
-            let w = 100 / (n * n)
-            props = {x: house.x * w + .5, y: .5, width: w-1, height: 99}
-            break
-        }
-        case 'Row': {
-            let h = 100 / (n * n)
-            props = {x: .5, y: house.y * h + .5, width: 99, height: h-1}
-            break
-        }
-        case 'Block': {
-            let s = 100 / n
-            props = { x: house.bx * s + .5, y: house.by * s + .5, width: s-1, height: s-1 }
-            break
-        }
 
+    if(house.isBlock()) {
+        let s = 100 / n
+        props = { x: house.sx * s + .5, y: house.sy * s + .5, width: s-1, height: s-1 }
+    } else if(house.isColumn()) {
+        let w = 100 / (n * n)
+        props = {x: house.x * w + .5, y: .5, width: w-1, height: 99}
+    } else if(house.isRow()) {
+        let h = 100 / (n * n)
+        props = {x: .5, y: house.y * h + .5, width: 99, height: h-1}
     }
 
     return <rect className={sudokuBoardClasses.house_highlight} rx={2} ry={2} {...props}/>

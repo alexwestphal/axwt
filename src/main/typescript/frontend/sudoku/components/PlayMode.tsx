@@ -33,7 +33,7 @@ const playModeClasses = createClasses('PlayMode', ['overlay'])
 
 const PlayMode: React.FC = () => {
 
-    const board = useTypedSelector(selectCurrentPlayBoard,  (left, right) => left.version == right.version)
+    const board = useTypedSelector(selectCurrentPlayBoard)
     const playState = useTypedSelector(selectPlayState)
 
     const dispatch = useThunkDispatch()
@@ -52,7 +52,7 @@ const PlayMode: React.FC = () => {
     const handleKeyDown: React.KeyboardEventHandler = (ev) => {
         if(activeCellCoord == null) return
         let {x,y} = activeCellCoord
-        let activeCell = Sudoku.getCell(board, x, y)
+        let activeCell = board.getCell(x, y)
         let isKnownCell = activeCell.valueType == 'Known' || activeCell.valueType == 'Known-Conflict'
 
         if('1' <= ev.key && ev.key <= '9' && !isKnownCell) {
@@ -127,7 +127,7 @@ const PlayMode: React.FC = () => {
 
                     let highlight: BoardCellProps['highlight'] = 'none'
                     if(activeCellCoord != null) {
-                        let activeCell = Sudoku.getCell(board, activeCellCoord.x, activeCellCoord.y)
+                        let activeCell = board.getCell(activeCellCoord.x, activeCellCoord.y)
                         if(playState.highlight == 'On') {
                             if(board.isSameCell(cell, activeCellCoord)) highlight = 'active'
                             else if(

@@ -13,7 +13,7 @@ import SudokuBoard, {BoardCell} from './SudokuBoard'
 
 const SolveMode: React.FC = () => {
 
-    const initBoard = useTypedSelector(selectEditBoard, (left, right) => left.version == right.version)
+    const initBoard = useTypedSelector(selectEditBoard)
     const solveState = useTypedSelector(selectSolveState)
     const result = useTypedSelector(selectSolveResult)
 
@@ -29,15 +29,15 @@ const SolveMode: React.FC = () => {
                     let step = result.steps[stepIndex]
                     switch(step.type) {
                         case 'Wrong':
-                            setCurrentBoard(Sudoku.setCellValueGuess(currentBoard, step.x, step.y, step.value, false))
+                            setCurrentBoard(currentBoard.setCellValueGuess(step.x, step.y, step.value, false))
                             break
                         case 'Guess':
-                            setCurrentBoard(Sudoku.setCellValueGuess(currentBoard, step.x, step.y, step.value, false))
+                            setCurrentBoard(currentBoard.setCellValueGuess(step.x, step.y, step.value, false))
                             break
                         case 'Correct':
                             break
                         case 'Delete':
-                            setCurrentBoard(Sudoku.clearCell(currentBoard, step.x, step.y, false))
+                            setCurrentBoard(currentBoard.clearCell(step.x, step.y, false))
                             break
                     }
                     setStepIndex(stepIndex+1)

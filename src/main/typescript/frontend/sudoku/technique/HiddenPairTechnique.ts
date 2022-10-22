@@ -8,8 +8,8 @@ export class HiddenPairTechnique implements SearchTechnique {
 
     find(board: Sudoku.Board): SearchResult | null {
 
-        for(let house of Sudoku.getAllHouses(board)) {
-            let candidates = Sudoku.getCandidatesInHouse(board, house).filter(cwo => cwo.occurrences.length == 2)
+        for(let house of board.getAllHouses()) {
+            let candidates = board.getCandidatesInHouse(house).filter(cwo => cwo.occurrences.length == 2)
 
             for(let i=0; i<candidates.length-1; i++) {
                 for(let j=i+1; j<candidates.length; j++) {

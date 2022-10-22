@@ -7,7 +7,7 @@ export class HiddenSingleTechnique implements SearchTechnique {
 
     find(board: Sudoku.Board): SearchResult | null {
 
-        for(let house of Sudoku.getAllHouses(board)) {
+        for(let house of board.getAllHouses()) {
             for(let candidate of board.availableCandidates) {
                 let foundInCell: Sudoku.Cell = null
                 for(let cell of house.cells) {

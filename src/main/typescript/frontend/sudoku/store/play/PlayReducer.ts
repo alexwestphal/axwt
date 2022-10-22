@@ -17,12 +17,12 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
             let board = castImmutable(draft.current)
 
             for(let {x,y,value} of action.payload.foundValues) {
-                board = Sudoku.setCellValueUser(board, x, y, value)
+                board = board.setCellValueUser(x, y, value)
             }
             for(let {x,y,toClear} of action.payload.candidateClearances) {
-                let candidates = Sudoku.getCell(board, x, y).candidates
+                let candidates = board.getCell(x, y).candidates
                 candidates = candidates.filter(c => !toClear.includes(c))
-                board = Sudoku.setCellCandidates(board, x, y, candidates)
+                board = board.setCellCandidates(x, y, candidates)
             }
 
             draft.current = castDraft(board)
@@ -30,12 +30,12 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
             break
         }
         case 'su/play/clearCell':
-            draft.current = castDraft(Sudoku.clearCell(draft.current, action.meta.x, action.meta.y))
+            draft.current = castDraft(draft.current.clearCell(action.meta.x, action.meta.y))
             draft.prevChange = action
             draft.candidatesGenerated = false
             break
         case 'su/play/clearCellCandidates':
-            draft.current = castDraft(Sudoku.clearCandidates(draft.current))
+            draft.current = castDraft(draft.current.clearCandidates())
             draft.candidatesGenerated = false
             resetSearchState(draft)
             break
@@ -49,12 +49,12 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
             draft.candidatesGenerated = true
             break
         case 'su/play/setCellCandidates':
-            draft.current = castDraft(Sudoku.setCellCandidates(draft.current, action.meta.x, action.meta.y, action.payload))
+            draft.current = castDraft(draft.current.setCellCandidates(action.meta.x, action.meta.y, action.payload))
             draft.prevChange = action
             draft.candidatesGenerated = false
             break
         case 'su/play/setCellValue':
-            draft.current = castDraft(Sudoku.setCellValueUser(draft.current, action.meta.x, action.meta.y, action.payload))
+            draft.current = castDraft(draft.current.setCellValueUser(action.meta.x, action.meta.y, action.payload))
             draft.prevChange = action
             break
         case 'su/play/setEntryMode':
@@ -68,7 +68,7 @@ export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>,
             draft.assistant = draft.assistant == 'Off' ? 'On' : 'Off'
             break
         case 'su/play/toggleCellCandidate':
-            draft.current = castDraft(Sudoku.toggleCellCandidate(draft.current, action.meta.x, action.meta.y, action.payload))
+            draft.current = castDraft(draft.current.toggleCellCandidate(action.meta.x, action.meta.y, action.payload))
             draft.prevChange = action
             draft.candidatesGenerated = false
             break

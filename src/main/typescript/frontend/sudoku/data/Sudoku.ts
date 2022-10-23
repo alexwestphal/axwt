@@ -471,12 +471,57 @@ export namespace Sudoku {
         }
     }
 
-
-
-
     export interface CandidateWithOccurrences {
         readonly candidate: Value
         readonly occurrences: IndexN4[]
     }
+
+    export interface CreateFakeBoardArgs {
+        n: Sudoku.Size
+        defaultCellCandidates?: Sudoku.Value[]
+        cells: {
+            x: Sudoku.IndexN2,
+            y: Sudoku.IndexN2,
+            value?: Sudoku.Value,
+            candidates?: Sudoku.Value[]
+        }[]
+    }
+
+    export const createFakeBoard = (args: CreateFakeBoardArgs): Sudoku.Board => {
+        let defaultCellCandidates = args.defaultCellCandidates || ArrayUtils.range(1, args.n+1)
+
+        let board = new Sudoku.Board(args.n)
+        for(let cell of args.cells) {
+            if(cell.value != null) board = board.setCellValueKnown(cell.x, cell.y, cell.value)
+            let candidates = cell.candidates || defaultCellCandidates
+            board = board.setCellCandidates(cell.x, cell.y, candidates) 
+        }
+
+        return board
+    }
+
+    export const createFromValues = (n: Sudoku.Size, values: Sudoku.Value[]): Sudoku.Board => {
+        let board = new Sudoku.Board(n)
+        for(let i=0; i < board.n4; i++) {
+            let x = i % board.n2
+            let y = Math.floor(i / board.n2)
+            board = board.setCellValueKnown(x, y, values[i])
+        }
+        return board
+    }
+
+    export const filled3Board: Sudoku.Board = createFromValues(3, [
+        1, 2, 3,   4, 5, 6,   7, 8, 9,
+        7, 8, 9,   1, 2, 3,   4, 5, 6,
+        4, 5, 6,   7, 8, 9,   1, 2, 3,
+
+        9, 1, 2,   3, 4, 5,   6, 7, 8,
+        6, 7, 8,   9, 1, 2,   3, 4, 5,
+        3, 4, 5,   6, 7, 8,   9, 1, 2,
+
+        8, 9, 1,   2, 3, 4,   5, 6, 7,
+        5, 6, 7,   8, 9, 1,   2, 3, 4,
+        2, 3, 4,   5, 6, 7,   8, 9, 1
+    ])
 }
 

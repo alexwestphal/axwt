@@ -1,5 +1,5 @@
 
-import {ArrayUtils} from '@axwt/util'
+import {ArrayUtils, SetUtils} from '@axwt/util'
 
 import {Sudoku} from '../data'
 import {SearchTechnique, SearchResult, CandidateClearances} from './SearchTechnique'
@@ -27,21 +27,21 @@ export class NakedPairTechnique implements SearchTechnique {
                                 .filter(cell => cell.index != cellA.index && cell.index != cellB.index)
                                 .map(cell => ({
                                     x: cell.x, y: cell.y,
-                                    toClear: cell.candidates.filter(candidate => cellA.candidates.includes(candidate))
+                                    toClear: SetUtils.intersect(cell.candidates, cellA.candidates)
                                 }))
                                 .filter(cc => cc.toClear.length > 0)
 
-                            if(candidateClearances.length == 0) break
-
-                            return {
-                                key: 'NakedPair',
-                                candidateHighlights: [
-                                    { x: cellA.x, y: cellA.y, candidates: cellA.candidates },
-                                    { x: cellB.x, y: cellB.y, candidates: cellB.candidates },
-                                ],
-                                candidateClearances,
-                                foundValues: [],
-                                targetHouse: house
+                            if(candidateClearances.length > 0) {
+                                return {
+                                    key: 'NakedPair',
+                                    candidateHighlights: [
+                                        { x: cellA.x, y: cellA.y, candidates: cellA.candidates },
+                                        { x: cellB.x, y: cellB.y, candidates: cellB.candidates },
+                                    ],
+                                    candidateClearances,
+                                    foundValues: [],
+                                    targetHouse: house
+                                }
                             }
                         }
                     }

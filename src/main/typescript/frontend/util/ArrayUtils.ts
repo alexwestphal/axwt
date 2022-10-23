@@ -29,7 +29,7 @@ export namespace ArrayUtils {
         return result
     }
 
-    export const distinct = <T>(array: Array<T>): Array<T> => {
+    export const distinct = <T>(array: ReadonlyArray<T>): Array<T> => {
         if(array == null || array.length == 0) return []
 
         let result: Array<T> = []
@@ -123,18 +123,6 @@ export namespace ArrayUtils {
         let index = array.indexOf(after)
         if(index > -1) array.splice(index+1, 0, value)
         else array.push(value)
-    }
-
-    export const isSubset = <T>(xs: ReadonlyArray<T>, ys: ReadonlyArray<T>): boolean => {
-        if(xs === null || ys === null || xs.length > ys.length) return false
-
-        for(let i=0; i<xs.length; i++) {
-            if(!ys.includes(xs[i])) {
-                // xs[i] is not in ys
-                return false
-            }
-        }
-        return true
     }
 
     export const occurrences = <T>(array: ReadonlyArray<T>, value: T): number => {

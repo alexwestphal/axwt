@@ -167,8 +167,14 @@ export namespace Sudoku {
             })
         }
 
-        getCell(x: IndexN2, y: IndexN2): Cell {
-            return this.cells[x + y * this.n2]
+        getCell(index: IndexN4): Cell;
+        getCell(x: IndexN2, y: IndexN2): Cell;
+        getCell(xOrIndex, y?) {
+            if(y == undefined) {
+                return this.cells[xOrIndex]
+            } else {
+                return this.cells[xOrIndex + y * this.n2]
+            }
         }
 
         getColumn(x: IndexN2): Sudoku.Column {
@@ -280,8 +286,27 @@ export namespace Sudoku {
             })
         }
 
+        setBlockCandidates(sx: Sudoku.IndexN, sy: Sudoku.IndexN, houseCandidates: ReadonlyArray<Value | ReadonlyArray<Value>>): Sudoku.Board {
+            return this.setHouseCandidates(this.getBlock(sx, sy), houseCandidates)
+        }
+
+        setHouseCandidates(house: Sudoku.House, houseCandidates: ReadonlyArray<Value | ReadonlyArray<Value>>): Sudoku.Board {
+            if(house.cells.length != houseCandidates.length) throw new Error(`Bad arguments. candidates.length (${houseCandidates.length}) should be ${this.n2}`)
+            let board: Sudoku.Board = this
+            for(let i=0; i<house.cells.length; i++) {
+                let cell = house.cells[i]
+                let cellCandidates = houseCandidates[i]
+                if(typeof cellCandidates === 'number') {
+                    board = board.setCellValueKnown(cell.x, cell.y, cellCandidates)
+                } else {
+                    board = board.setCellCandidates(cell.x, cell.y, cellCandidates)
+                }
+            }
+            return board
+        }
+
         setCellCandidates(x: IndexN2, y: IndexN2, candidates: ReadonlyArray<Value>): Sudoku.Board {
-            return this.updateCell(x, y, {candidates})
+            return this.updateCell(x, y, { value: 0, valueType: 'None', candidates })
         }
 
         setCellValueUser(x: IndexN2, y: IndexN2, value: Value): Sudoku.Board {
@@ -479,7 +504,7 @@ export namespace Sudoku {
     export interface CreateFakeBoardArgs {
         n: Sudoku.Size
         defaultCellCandidates?: Sudoku.Value[]
-        cells: {
+        cells?: {
             x: Sudoku.IndexN2,
             y: Sudoku.IndexN2,
             value?: Sudoku.Value,
@@ -491,7 +516,7 @@ export namespace Sudoku {
         let defaultCellCandidates = args.defaultCellCandidates || ArrayUtils.range(1, args.n+1)
 
         let board = new Sudoku.Board(args.n)
-        for(let cell of args.cells) {
+        for(let cell of (args.cells || [])) {
             if(cell.value != null) board = board.setCellValueKnown(cell.x, cell.y, cell.value)
             let candidates = cell.candidates || defaultCellCandidates
             board = board.setCellCandidates(cell.x, cell.y, candidates) 
@@ -509,6 +534,8 @@ export namespace Sudoku {
         }
         return board
     }
+
+    export const empty3Board: Sudoku.Board = createFakeBoard({ n: 3 })
 
     export const filled3Board: Sudoku.Board = createFromValues(3, [
         1, 2, 3,   4, 5, 6,   7, 8, 9,

@@ -34,19 +34,17 @@ export class HiddenPairTechnique implements SearchTechnique {
                             }))
                             .filter(cc => cc.toClear.length > 0)
 
-                        if(candidateClearances.length == 0) break
-
-                        console.log("Hidden Pair found: ", candidates)
-
-                        return {
-                            key: 'HiddenPair',
-                            candidateHighlights: [
-                                { x: cellA.x, y: cellA.y, candidates: [candidateA, candidateB] },
-                                { x: cellB.x, y: cellB.y, candidates: [candidateA, candidateB] },
-                            ],
-                            candidateClearances,
-                            foundValues: [],
-                            targetHouse: house
+                        if(candidateClearances.length > 0) {
+                            return {
+                                key: 'HiddenPair',
+                                candidateHighlights: [
+                                    { x: cellA.x, y: cellA.y, candidates: [candidateA, candidateB] },
+                                    { x: cellB.x, y: cellB.y, candidates: [candidateA, candidateB] },
+                                ],
+                                candidateClearances,
+                                foundValues: [],
+                                targetHouse: house
+                            }
                         }
                     }
                 }

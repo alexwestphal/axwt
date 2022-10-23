@@ -58,5 +58,6 @@ export class PointingTripleTechnique implements SearchTechnique {
                 }
             }
         }
+        return null
     }
 }

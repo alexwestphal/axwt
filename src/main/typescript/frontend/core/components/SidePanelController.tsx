@@ -4,7 +4,7 @@
 
 import * as React from 'react'
 
-import {Box, IconButton, MenuItem, Select, SxProps, TextField} from '@mui/material'
+import {Box, Divider, IconButton, MenuItem, Select, SxProps, TextField} from '@mui/material'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import SettingsIcon from '@mui/icons-material/Settings'
@@ -24,6 +24,7 @@ export namespace SidePanelControllerProps {
         value: string
         Component: React.ComponentType
         available?: boolean
+        Controls?: React.ComponentType
     }
 }
 
@@ -65,7 +66,7 @@ export const SidePanelController: React.FC<SidePanelControllerProps> = ({classNa
                     alignItems: 'center'
                 }),
                 [`& .${classes.titleBar_controls}`]: {
-
+                    display: 'flex',
                 },
                 [`& .${classes.titleBar_spacer}`]: {
                     flexGrow: 1,
@@ -100,6 +101,10 @@ export const SidePanelController: React.FC<SidePanelControllerProps> = ({classNa
             </TextField>
             <div className={classes.titleBar_spacer}></div>
             <div className={classes.titleBar_controls}>
+                {activePanel?.Controls && <>
+                    {React.createElement(activePanel.Controls, {})}
+                    <Divider orientation="vertical" flexItem sx={{ mx: 1 }}/>
+                </>}
                 <IconButton size="small">
                     <SettingsIcon/>
                 </IconButton>

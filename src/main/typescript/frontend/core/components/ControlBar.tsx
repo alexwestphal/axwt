@@ -160,7 +160,7 @@ export const ControlBarBase: React.FC = () => {
             </Link>
             <div className={classes.main}>
                 <div className={classes.title}>{display.title || "..."}</div>
-                <ControlBarMenus menus={props.menus}/>
+                <ControlBarMenus menus={props.menus} onMenuAction={props.onMenuAction}/>
             </div>
             <Box display="flex">{props.navControls}</Box>
             { rightDrawerControl || <Box mr={1}/>}

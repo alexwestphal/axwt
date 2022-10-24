@@ -3,11 +3,15 @@ import * as React from 'react'
 
 import {SidePanelController} from '@axwt/core'
 
-import RepositoryPanel from './RepositoryPanel'
+import FileSystemPanel, {FileSystemPanelControls} from './FileSystemPanel'
 
 export const LeftPanel: React.FC = () => {
     return <SidePanelController side="Left" panels={[
-        { title: "Repository", value: "repository", Component: RepositoryPanel }
+        {
+            title: "Repository", value: "repository",
+            Component: FileSystemPanel,
+            Controls: FileSystemPanelControls
+        }
     ]}/>
 }
 

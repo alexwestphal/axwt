@@ -134,17 +134,23 @@ const PathVisualizer: React.FC = () => {
 
         />
         <ResizeablePanelLayout
-            leftPanel={{
-                Component: LeftPanel,
+            leftSide={{
+                panels: [
+                    { Component: LeftPanel, label: "Left Panel" }
+                ]
+
             }}
-            rightPanel={{
-                Component: RightPanel,
+            rightSide={{
+                panels: [
+                    { Component: RightPanel, label: "Right Panel" }
+                ],
+
                 width: 1/3
             }}
             // bottomPanel={{
             //     Component: React.Fragment
             // }}
-            mainPanel={{
+            main={{
                 Component: SVGDisplayPanel
             }}
         />

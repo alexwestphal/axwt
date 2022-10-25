@@ -9,7 +9,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import SettingsIcon from '@mui/icons-material/Settings'
 
-import {createClasses} from '@axwt/util'
+import {cls, createClasses} from '@axwt/util'
 
 
 export interface SidePanelControllerProps {
@@ -17,6 +17,7 @@ export interface SidePanelControllerProps {
     className?: string
     sx?: SxProps
     panels: (SidePanelControllerProps.PanelSpec)[]
+    collapsePanel?: () => void
 }
 export namespace SidePanelControllerProps {
     export interface PanelSpec {
@@ -30,7 +31,7 @@ export namespace SidePanelControllerProps {
 
 const sidePanelControllerClasses = createClasses("CompactPanel", ["panelContents", "titleBar", "titleBar_controls", "titleBar_spacer", "titleBar_panelSelector"])
 
-export const SidePanelController: React.FC<SidePanelControllerProps> = ({className, panels, side, sx = []}) => {
+export const SidePanelController: React.FC<SidePanelControllerProps> = ({className, panels, side, collapsePanel, sx = []}) => {
     panels = panels.filter(panel => !!panel) as SidePanelControllerProps.PanelSpec[]
 
     const [activePanelKey, setActivePanelKey] = React.useState(panels.length > 0 ? panels[0].value : null)
@@ -44,7 +45,7 @@ export const SidePanelController: React.FC<SidePanelControllerProps> = ({classNa
     const classes = sidePanelControllerClasses
 
     return <Box
-        className={classes.root + (className ? ' ' + className : '')}
+        className={cls(classes.root, className)}
         sx={[
             {
                 height: '100%',
@@ -108,9 +109,9 @@ export const SidePanelController: React.FC<SidePanelControllerProps> = ({classNa
                 <IconButton size="small">
                     <SettingsIcon/>
                 </IconButton>
-                <IconButton size="small">
+                { collapsePanel && <IconButton size="small" onClick={collapsePanel}>
                     { side == 'Left' ? <ChevronLeftIcon/> : <ChevronRightIcon/> }
-                </IconButton>
+                </IconButton>}
             </div>
         </div>
         <div className={classes.panelContents}>

@@ -13,7 +13,7 @@ import {
 } from '../store'
 
 import AssistantPanel from './AssistantPanel'
-import LeftPanel from './LeftPanel'
+import FilesPanel from './FilesPanel'
 import MainPanel from './MainPanel'
 import SolvePanel from './SolvePanel'
 
@@ -62,15 +62,26 @@ export const SudokuApp: React.FC = () => {
             onMenuAction={handleMenuAction}
         />
         <ResizeablePanelLayout
-            leftPanel={ fsState.status != 'Closed' && {
-                Component: LeftPanel
+            leftSide={ fsState.status != 'Closed' && {
+                panels: [
+                    { Component: FilesPanel, label: "Files"  },
+                ]
+
             }}
-            mainPanel={{
+            main={{
                 Component: MainPanel
             }}
-            rightPanel={
-                appMode == 'Solve' && { Component: SolvePanel } ||
-                appMode == 'Play' && assistant == 'On'&& { Component: AssistantPanel }
+            rightSide={
+                appMode == 'Solve' && {
+                    panels: [
+                        { Component: SolvePanel, label: 'Solve' }
+                    ]
+                } ||
+                appMode == 'Play' && assistant == 'On'&& {
+                    panels: [
+                        { Component: AssistantPanel, label: 'Assistant' }
+                    ]
+                }
             }
         />
     </>

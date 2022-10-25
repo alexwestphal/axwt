@@ -12,10 +12,13 @@ export const HttpTester: React.FC = () => {
 
     return <>
         <ResizeablePanelLayout
-            leftPanel={{
-                Component: LeftPanel
+            leftSide={{
+                panels: [
+                    { Component: LeftPanel, label: "Left" }
+                ]
+
             }}
-            mainPanel={{
+            main={{
                 Component: HTMainPanel
             }}
         />

@@ -4,7 +4,7 @@
 
 import * as React from 'react'
 
-import {Box, Divider, IconButton, MenuItem, Select, SxProps, TextField} from '@mui/material'
+import {Box, Divider, IconButton, MenuItem, Select, SxProps, TextField, Tooltip} from '@mui/material'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import SettingsIcon from '@mui/icons-material/Settings'
@@ -109,9 +109,11 @@ export const SidePanelController: React.FC<SidePanelControllerProps> = ({classNa
                 <IconButton size="small">
                     <SettingsIcon/>
                 </IconButton>
-                { collapsePanel && <IconButton size="small" onClick={collapsePanel}>
-                    { side == 'Left' ? <ChevronLeftIcon/> : <ChevronRightIcon/> }
-                </IconButton>}
+                { collapsePanel && <Tooltip title="Hide Panel">
+                    <IconButton size="small" onClick={collapsePanel}>
+                        { side == 'Left' ? <ChevronLeftIcon/> : <ChevronRightIcon/> }
+                    </IconButton>
+                </Tooltip>}
             </div>
         </div>
         <div className={classes.panelContents}>

@@ -21,16 +21,20 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore'
 import {FileSystem} from '@axwt/core'
 import BlankIcon from '@axwt/core/icons/Blank'
 
+import * as Core from '@axwt/core/store'
 import {createClasses} from '@axwt/util'
 
-import {FileSystemActions, selectFSState, useThunkDispatch, useTypedSelector} from '../store'
 
-const fileSystemPanelClasses = createClasses("FileSystemPanel", [])
+export interface FSWorkspacePanelProps {
+    workspaceId: string
+}
 
-export const FileSystemPanel: React.FC = () => {
+const fsWorkspacePanelClasses = createClasses("FileSystemPanel", [])
 
-    const fsState = useTypedSelector(selectFSState)
-    const dispatch = useThunkDispatch()
+export const FSWorkspacePanel: React.FC<FSWorkspacePanelProps> = ({ workspaceId }) => {
+
+    const workspace = Core.useTypedSelector(state => Core.selectFSWorkspace(state, workspaceId))
+    const dispatch = Core.useThunkDispatch()
 
     const [contextMenu, setContextMenu] = React.useState<{ mouseX: number, mouseY: number } | null>(null)
     const [selectedPath, setSelectedPath] = React.useState<string>("/")
@@ -51,11 +55,11 @@ export const FileSystemPanel: React.FC = () => {
         )
     }
 
-    const classes = fileSystemPanelClasses
+    const classes = fsWorkspacePanelClasses
 
-    if(fsState.status == 'Pending') {
+    if(workspace.status == 'Pending') {
         return <Box display="flex" justifyContent="center" padding={2}>
-            <Button variant="contained" onClick={() => dispatch(FileSystemActions.load())}>Load Files</Button>
+            <Button variant="contained" onClick={() => dispatch(Core.FSActions.loadWorkspace(workspaceId))}>Load Files</Button>
         </Box>
     } else {
         return <List
@@ -65,9 +69,9 @@ export const FileSystemPanel: React.FC = () => {
             sx={{}}
         >
             <DirectoryDisplay
-                directory={fsState.rootEntry} depth={1}
-                folds={fsState.folds}
-                toggleFold={(path) => dispatch(FileSystemActions.toggleFold(path))}
+                directory={workspace.rootEntry} depth={1}
+                folds={workspace.folds}
+                toggleFold={(path) => dispatch(Core.FSActions.toggleFold(workspaceId, path))}
                 selectedPath={selectedPath}
                 onSelect={(path) => setSelectedPath(path)}
             />
@@ -96,19 +100,20 @@ export const FileSystemPanel: React.FC = () => {
 
 }
 
-export default FileSystemPanel
+export default FSWorkspacePanel
 
-export const FileSystemPanelControls: React.FC = () => {
 
-    const fsState = useTypedSelector(selectFSState)
-    const dispatch = useThunkDispatch()
+export const FSWorkspacePanelControls: React.FC<FSWorkspacePanelProps> = ({ workspaceId }) => {
 
-    return fsState.status == 'Open' && <>
+    const workspace = Core.useTypedSelector(state => Core.selectFSWorkspace(state, workspaceId))
+    const dispatch = Core.useThunkDispatch()
+
+    return workspace.status == 'Open' && <>
         <Tooltip title="Expand All">
             <IconButton
                 size="small"
-                disabled={fsState.overallFold == 'UnfoldAll'}
-                onClick={() => dispatch(FileSystemActions.unfoldAll())}
+                disabled={workspace.overallFold == 'UnfoldAll'}
+                onClick={() => dispatch(Core.FSActions.unfoldAll(workspaceId))}
             >
                 <UnfoldMoreIcon/>
             </IconButton>
@@ -116,8 +121,8 @@ export const FileSystemPanelControls: React.FC = () => {
         <Tooltip title="Collapse All">
             <IconButton
                 size="small"
-                disabled={fsState.overallFold == 'FoldAll'}
-                onClick={() => dispatch(FileSystemActions.foldAll())}
+                disabled={workspace.overallFold == 'FoldAll'}
+                onClick={() => dispatch(Core.FSActions.foldAll(workspaceId))}
             >
                 <UnfoldLessIcon/>
             </IconButton>

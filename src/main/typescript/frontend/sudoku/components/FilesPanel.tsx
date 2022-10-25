@@ -1,9 +1,9 @@
 
 import * as React from 'react'
 
-import {PanelSizingProps, SidePanelController} from '@axwt/core'
+import {FSWorkspacePanel, FSWorkspacePanelControls, PanelSizingProps, SidePanelController} from '@axwt/core'
 
-import FileSystemPanel, {FileSystemPanelControls} from './FileSystemPanel'
+import * as SU from '../store'
 
 export const FilesPanel: React.FC<PanelSizingProps> = ({collapsePanel}) => {
     return <SidePanelController
@@ -12,11 +12,12 @@ export const FilesPanel: React.FC<PanelSizingProps> = ({collapsePanel}) => {
         panels={[
             {
                 title: "All Files", value: "all",
-                Component: FileSystemPanel,
-                Controls: FileSystemPanelControls
+                Component: () => <FSWorkspacePanel workspaceId={SU.FSWorkspaceId}/>,
+                Controls: () => <FSWorkspacePanelControls workspaceId={SU.FSWorkspaceId}/>
             }
         ]}
     />
 }
 
 export default FilesPanel
+

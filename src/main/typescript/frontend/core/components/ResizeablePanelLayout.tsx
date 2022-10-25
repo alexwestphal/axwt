@@ -179,8 +179,8 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
             <div className={classes.frameBar_inner}>
                 {props.leftSide.panels.map((panelSpec, panelIndex) =>
                     <ToggleButton
-                        key={panelIndex}
-                        size="small" value={''+panelIndex} sx={{ border: 'none' }}
+                        key={panelIndex} size="small"
+                        value={''+panelIndex} sx={{ border: 'none' }}
                         selected={leftPanelOpen && leftPanelIndex == panelIndex}
                         onChange={() => handleLeftSideTabClick(panelIndex)}
                     >{panelSpec.label}</ToggleButton>
@@ -215,9 +215,9 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
         <div className={classes.frameBar}>
             <div className={classes.frameBar_inner}>
                 { props.rightSide.panels.map((panelSpec, panelIndex) =>
-                    <ToggleButton
+                    <ToggleButton size="small"
                         key={panelIndex}
-                        size="small" value={''+panelIndex} sx={{ border: 'none' }}
+                        value={''+panelIndex} sx={{ border: 'none' }}
                         selected={rightPanelOpen && rightPanelIndex == panelIndex}
                         onChange={() => handleRightSideTabClick(panelIndex)}
                     >{panelSpec.label}</ToggleButton>

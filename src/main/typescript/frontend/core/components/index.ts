@@ -2,6 +2,7 @@
 export * from './AXWT'
 export * from './ControlBar'
 export * from './ErrorSnackbar'
+export * from './FSWorkspacePanel'
 export * from './ResizeablePanelLayout'
 export * from './Routing'
 export * from './SaveButton'

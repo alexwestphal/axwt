@@ -1,4 +1,4 @@
-
+import {IDBPDatabase} from 'idb'
 import * as ReactRedux from 'react-redux'
 import {ReducersMapObject} from 'redux'
 import * as ReduxThunk from 'redux-thunk'
@@ -6,6 +6,7 @@ import * as ReduxThunk from 'redux-thunk'
 import {UUID} from '../data'
 
 import CoreServerAPI from '../CoreServerAPI'
+import {DatabaseSchema} from '../Database'
 
 import {Action, createAction} from './Action'
 
@@ -13,12 +14,12 @@ import {CommunicationActions, CommunicationReducer, CommunicationState} from './
 import {ConfigActions, ConfigReducer, ConfigState} from './config'
 import {DisplayActions, DisplayReducer, DisplayState} from './display'
 import {ErrorActions, ErrorReducer, ErrorState} from './error'
+import {FSActions, FSReducer, FSState} from './fs'
 
 
+export type ExtraArgs = { coreServerAPI: CoreServerAPI, windows: Map<UUID, Window>, handles: Map<UUID, any>, database: Promise<IDBPDatabase<DatabaseSchema>> }
 
-export type ExtraArgs = { coreServerAPI: CoreServerAPI, windows: Map<UUID, Window>, handles: Map<UUID, any> }
-
-export type AnyAction = CommunicationActions.Any | ConfigActions.Any | DisplayActions.Any | ErrorActions.Any | RegisterModule
+export type AnyAction = CommunicationActions.Any | ConfigActions.Any | DisplayActions.Any | ErrorActions.Any | FSActions.Any | RegisterModule
 
 export type ThunkAction<R = void, MS = {}, ME = {}, MA extends Action<any> = AnyAction> =
     ReduxThunk.ThunkAction<R, State & MS, ExtraArgs & ME, AnyAction | MA>
@@ -31,6 +32,7 @@ export interface State {
     readonly config: ConfigState
     readonly display: DisplayState
     readonly error: ErrorState
+    readonly fs: FSState
 }
 
 export namespace State {
@@ -38,7 +40,8 @@ export namespace State {
         communication: CommunicationState.Default,
         config: ConfigState.Default,
         display: DisplayState.Default,
-        error: ErrorState.Default
+        error: ErrorState.Default,
+        fs: FSState.Default
     }
 }
 
@@ -46,7 +49,8 @@ export const Reducers: ReducersMapObject<State, AnyAction> = {
     communication: CommunicationReducer,
     config: ConfigReducer,
     display: DisplayReducer,
-    error: ErrorReducer
+    error: ErrorReducer,
+    fs: FSReducer
 }
 
 

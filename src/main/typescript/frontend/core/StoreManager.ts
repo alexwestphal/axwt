@@ -9,7 +9,9 @@ import * as Core from './store'
 
 import AbstractServerAPI from './AbstractServerAPI'
 import CoreServerAPI from './CoreServerAPI'
+import {openDatabase} from './Database'
 import Module from './Module'
+
 
 export class StoreManager {
 
@@ -23,7 +25,9 @@ export class StoreManager {
 
     constructor() {
         let coreServerAPI = new CoreServerAPI()
-        this.extraArgs = { coreServerAPI: coreServerAPI, windows: new Map(), handles: new Map() }
+        this.extraArgs = { coreServerAPI: coreServerAPI, windows: new Map(), handles: new Map(), database: openDatabase() }
+
+
 
         this.reducers = Core.Reducers
 

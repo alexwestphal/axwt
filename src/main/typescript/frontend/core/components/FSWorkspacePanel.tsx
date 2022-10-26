@@ -9,19 +9,20 @@ import {
     ListItemButton,
     ListItemIcon,
     ListItemText,
-    Menu,
-    MenuItem, Tooltip
+    Tooltip
 } from '@mui/material'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import ContentCutIcon from '@mui/icons-material/ContentCut'
+import ContentPasteIcon from '@mui/icons-material/ContentPaste'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import FolderIcon from '@mui/icons-material/Folder'
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess'
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore'
 
-import {FileSystem} from '@axwt/core'
-import BlankIcon from '@axwt/core/icons/Blank'
-
+import {ContextMenu, FileSystem, useContextMenuHandler} from '@axwt/core'
 import * as Core from '@axwt/core/store'
+
 import {createClasses} from '@axwt/util'
 
 
@@ -36,24 +37,10 @@ export const FSWorkspacePanel: React.FC<FSWorkspacePanelProps> = ({ workspaceId 
     const workspace = Core.useTypedSelector(state => Core.selectFSWorkspace(state, workspaceId))
     const dispatch = Core.useThunkDispatch()
 
-    const [contextMenu, setContextMenu] = React.useState<{ mouseX: number, mouseY: number } | null>(null)
     const [selectedPath, setSelectedPath] = React.useState<string>("/")
 
-    const handleMenuClose = () => {
-        setContextMenu(null)
-    }
+    const {contextMenuProps, handleContextMenu} = useContextMenuHandler()
 
-    const handleContextMenu: React.MouseEventHandler = (event) => {
-        event.preventDefault()
-        setContextMenu(
-            contextMenu === null
-                ? {
-                    mouseX: event.clientX + 2,
-                    mouseY: event.clientY - 6,
-                }
-                : null
-        )
-    }
 
     const classes = fsWorkspacePanelClasses
 
@@ -75,25 +62,35 @@ export const FSWorkspacePanel: React.FC<FSWorkspacePanelProps> = ({ workspaceId 
                 selectedPath={selectedPath}
                 onSelect={(path) => setSelectedPath(path)}
             />
-            <Menu
-                open={contextMenu !== null}
-                onClose={handleMenuClose}
-                anchorReference="anchorPosition"
-                anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
-                MenuListProps={{
-                    dense: true
-                }}
-            >
-                <MenuItem
-                    autoFocus
-                    divider
-                >
-                    <ListItemIcon>
-                        <BlankIcon/>
-                        <ListItemText primary="New Board"/>
-                    </ListItemIcon>
-                </MenuItem>
-            </Menu>
+            <ContextMenu {...contextMenuProps} menuItems={[
+                {
+                    label: "New",
+                    submenuItems: [
+                        { label: "Sudoku Board" },
+                        { label: "Directory", icon: FolderIcon },
+                    ],
+                    divider: true
+                },
+                {
+                    label: "Cut",
+                    icon: ContentCutIcon,
+                    keyboardShortcut: '⌘X'
+                },
+                {
+                    label: "Copy",
+                    icon: ContentCopyIcon,
+                    keyboardShortcut: '⌘C'
+                },
+                {
+                    label: "Paste",
+                    icon: ContentPasteIcon,
+                    keyboardShortcut: '⌘P',
+                    divider: true
+                },
+                {
+                    label: "Delete"
+                }
+            ]}/>
         </List>
     }
 

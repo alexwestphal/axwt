@@ -1,5 +1,6 @@
 
 export * from './AXWT'
+export * from './ContextMenu'
 export * from './ControlBar'
 export * from './ErrorSnackbar'
 export * from './FSWorkspacePanel'

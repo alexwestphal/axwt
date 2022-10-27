@@ -107,7 +107,7 @@ export const SidePanelController: React.FC<SidePanelControllerProps> = ({classNa
                     <Divider orientation="vertical" flexItem sx={{ mx: 1 }}/>
                 </>}
                 <IconButton size="small">
-                    <SettingsIcon/>
+                    <SettingsIcon fontSize="small"/>
                 </IconButton>
                 { collapsePanel && <Tooltip title="Hide Panel">
                     <IconButton size="small" onClick={collapsePanel}>

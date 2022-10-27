@@ -1,8 +1,10 @@
 
 
-import {BoardSize, BoardType, Sudoku} from '../../data'
+import {AppMode, BoardSize, BoardType, Sudoku} from '../../data'
 
 export interface BoardState {
+    boardMode: AppMode
+
     boardType: BoardType
     boardSize: BoardSize
 
@@ -11,6 +13,7 @@ export interface BoardState {
 
 export namespace BoardState {
     export const Default: BoardState = {
+        boardMode: 'Define',
         boardType: 'Standard',
         boardSize: 3,
 

@@ -11,9 +11,8 @@ export namespace AppActions {
 
     export type QuickSave = Action<'su/app/quickSave'>
 
-    export type SetMode = Action<'su/app/setMode', AppMode>
 
-    export type Any = LoadQuickSave | QuickSave | SetMode
+    export type Any = LoadQuickSave | QuickSave
 
 
     export const loadQuickSave = (): SU.ThunkAction =>
@@ -35,7 +34,4 @@ export namespace AppActions {
             localStorage.setItem("AXWT-SU-QUICKSAVE", json)
         }
 
-
-    export const setMode = (mode: AppMode): SetMode =>
-        createAction('su/app/setMode', mode)
 }

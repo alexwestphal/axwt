@@ -1,13 +1,13 @@
 
 import * as React from 'react'
 
-import {Box, Button, Collapse, ToggleButton, useTheme} from '@mui/material'
+import {Box, ToggleButton, useTheme} from '@mui/material'
 import {grey} from '@mui/material/colors'
 import {lighten, Theme} from '@mui/material/styles'
 
 import DragHandleIcon from '@mui/icons-material/DragHandle'
 
-import {cls, createClasses, useWindowSize} from '@axwt/util'
+import {cls, createClasses, usePrevious, useWindowSize} from '@axwt/util'
 
 import DragHandleVerticalIcon from '../icons/DragHandleVertical'
 
@@ -26,6 +26,7 @@ export interface SidePanelSpec {
     Component: React.ComponentType<PanelSizingProps>
     label: string
     available?: boolean
+    autoOpen?: boolean
 }
 
 export interface LayoutProps {
@@ -52,7 +53,7 @@ export interface LayoutProps {
 }
 
 const FrameBarWidth = 32
-const HeaderHeight = 48
+const HeaderHeight = 64
 const BottomPanelMinHeightF = 0.1
 const MainPanelMinHeightF = 0.2
 const MainPanelMinWidthF = 0.2
@@ -60,7 +61,7 @@ const SidePanelMinWidthF = 0.2
 
 
 const classes = createClasses("RPL", [
-    "frameBar", "frameBar_inner", "frameBar_buttonSelected",
+    "frameBar", "frameBar_innerLeft", "frameBar_innerRight", "frameBar_button",
     "resizeBorder", "resizeBorder_column", "resizeBorder_row",
     "resizeHandle", "resizeHandle_column", "resizeHandle_row",
     "panelBottom", "panelLeft", "panelMain", "panelRight", "panelColumn", "panelRow",
@@ -74,8 +75,8 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
     const { width: windowWidth, height: windowHeight } = useWindowSize()
 
     const [bottomPanelOpen, setBottomPanelOpen] = React.useState(false)
-    const [leftPanelOpen, setLeftPanelOpen] = React.useState(true)
-    const [rightPanelOpen, setRightPanelOpen] = React.useState(true)
+    const [leftPanelOpen, setLeftPanelOpen] = React.useState(false)
+    const [rightPanelOpen, setRightPanelOpen] = React.useState(false)
 
     const [leftPanelIndex, setLeftPanelIndex] = React.useState<number>(0)
     const [rightPanelIndex, setRightPanelIndex] = React.useState<number>(0)
@@ -86,6 +87,39 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
     const [bottomPanelHeightF, setBottomPanelHeightF] = React.useState(0.25)
 
     const [activeHandle, setActiveHandle] = React.useState<'Left' | 'Right' | 'Bottom'>(null)
+
+    const previousProps = usePrevious(props)
+    React.useEffect(() => {
+        let currentLeftPanels = props.leftSide.panels
+        let currentRightPanels = props.rightSide.panels
+
+        // Close the current left panel if required
+        if (!currentLeftPanels[leftPanelIndex].available) setLeftPanelOpen(false)
+
+        // Close the current right panel if required
+        if (!currentRightPanels[rightPanelIndex].available) setRightPanelOpen(false)
+
+        // Auto-open a panel on the left if applicable
+        for (let i = 0; i < currentLeftPanels.length; i++) {
+            let previouslyAvailable = previousProps ? previousProps.leftSide.panels[i].available : false
+            if (!previouslyAvailable && currentLeftPanels[i].available && currentLeftPanels[i].autoOpen) {
+                setLeftPanelIndex(i)
+                setLeftPanelOpen(true)
+                break
+            }
+        }
+
+        // Auto-open a panel on the right if applicable
+        for(let i = 0; i < currentRightPanels.length; i++) {
+            let previousAvailable = previousProps ? previousProps.rightSide.panels[i].available : false
+            if(!previousAvailable && currentRightPanels[i].available && currentRightPanels[i].autoOpen) {
+                setRightPanelIndex(i)
+                setRightPanelOpen(true)
+                break
+            }
+        }
+
+    }, [props])
 
     const handleLeftSideTabClick = (panelIndex: number) => {
         if(panelIndex == leftPanelIndex) {
@@ -176,11 +210,13 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
 
     const leftPanel = props.leftSide && <>
         <div className={classes.frameBar}>
-            <div className={classes.frameBar_inner}>
+            <div className={classes.frameBar_innerLeft}>
                 {props.leftSide.panels.map((panelSpec, panelIndex) =>
                     <ToggleButton
+                        className={classes.frameBar_button}
                         key={panelIndex} size="small"
                         value={''+panelIndex} sx={{ border: 'none' }}
+                        disabled={!panelSpec.available}
                         selected={leftPanelOpen && leftPanelIndex == panelIndex}
                         onChange={() => handleLeftSideTabClick(panelIndex)}
                     >{panelSpec.label}</ToggleButton>
@@ -210,14 +246,16 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
                     <DragHandleVerticalIcon/>
                 </div>
             </div>
-            <div className={classes.panelRight} style={{width: rightPanelProps.width}}>{ props.rightSide && React.createElement(props.rightSide.panels[0].Component, rightPanelProps)}</div>
+            <div className={classes.panelRight} style={{width: rightPanelProps.width}}>{ props.rightSide && React.createElement(props.rightSide.panels[rightPanelIndex].Component, rightPanelProps)}</div>
         </>}
         <div className={classes.frameBar}>
-            <div className={classes.frameBar_inner}>
+            <div className={classes.frameBar_innerRight}>
                 { props.rightSide.panels.map((panelSpec, panelIndex) =>
-                    <ToggleButton size="small"
-                        key={panelIndex}
+                    <ToggleButton
+                        className={classes.frameBar_button}
+                        key={panelIndex} size="small"
                         value={''+panelIndex} sx={{ border: 'none' }}
+                        disabled={!panelSpec.available}
                         selected={rightPanelOpen && rightPanelIndex == panelIndex}
                         onChange={() => handleRightSideTabClick(panelIndex)}
                     >{panelSpec.label}</ToggleButton>
@@ -247,7 +285,7 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
                 // transform: 'rotate(-90deg)',
                 // transformOrigin: 'top ',
             }),
-            [`& .${classes.frameBar_inner}`]: {
+            [`& .${classes.frameBar_innerLeft}`]: {
                 position: 'absolute',
                 bottom: 0, left: FrameBarWidth,
                 display: 'flex',
@@ -259,8 +297,24 @@ export const ResizeablePanelLayout: React.FC<LayoutProps> = (props) => {
                 transformOrigin: 'bottom left',
 
             },
-            [`& .${classes.frameBar_buttonSelected}`]: {
-                backgroundColor: grey[400]
+            [`& .${classes.frameBar_innerRight}`]: {
+                position: 'absolute',
+                bottom: 0, right: FrameBarWidth,
+                display: 'flex',
+                flexDirection: 'row',
+                width: mainPanelHeight+'px',
+                height: FrameBarWidth+'px',
+                alignItems: 'stretch',
+                transform: `rotate(90deg)`,
+                transformOrigin: 'bottom right',
+
+            },
+            [`& .${classes.frameBar_button}`]: {
+                paddingX: 2,
+
+                "&.Mui-disabled": {
+                    border: 'none'
+                }
             },
 
             [`& .${classes.resizeBorder}`]: {

@@ -27,5 +27,8 @@ export const BoardReducer: Reducer<BoardState> = produce((draft: Draft<BoardStat
         case 'su/board/setCellValue':
             draft.current = castDraft(draft.current.setCellValueKnown(action.meta.x, action.meta.y, action.payload))
             break
+        case 'su/board/setMode':
+            draft.boardMode = action.payload
+            break
     }
 }, BoardState.Default)

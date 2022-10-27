@@ -1,18 +1,18 @@
 
 import * as React from 'react'
 
-import {Button} from '@mui/material'
+import {Divider, IconButton, Tooltip} from '@mui/material'
+import UndoIcon from '@mui/icons-material/Undo'
+import RedoIcon from '@mui/icons-material/Redo'
 import SaveIcon from '@mui/icons-material/Save'
 
 import {Sudoku} from '../data'
-import {AppActions, BoardActions, selectEditBoard, useThunkDispatch, useTypedSelector} from '../store'
+import {BoardActions, selectEditBoard, useThunkDispatch, useTypedSelector} from '../store'
 
 import SudokuBoard, {BoardCell, SudokuBoardProps} from './SudokuBoard'
 
 
 import {mainPanelClasses} from './MainPanel'
-
-
 
 const EditMode: React.FC = () => {
 
@@ -60,6 +60,31 @@ const EditMode: React.FC = () => {
     }
 
     return <>
+        <div className={mainPanelClasses.controls}>
+            <div className={mainPanelClasses.controlsSpacer}></div>
+            <Tooltip title="Save Board">
+                <span>
+                    <IconButton disabled>
+                        <SaveIcon/>
+                    </IconButton>
+                </span>
+            </Tooltip>
+            <Divider orientation="vertical" flexItem sx={{ mx: 1 }}/>
+            <Tooltip title="Undo">
+                <span>
+                    <IconButton disabled>
+                    <UndoIcon/>
+                </IconButton>
+                </span>
+            </Tooltip>
+            <Tooltip title="Redo">
+                <span>
+                    <IconButton disabled>
+                    <RedoIcon/>
+                </IconButton>
+                </span>
+            </Tooltip>
+        </div>
         <SudokuBoard n={3} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown}>
             {board.cells.map(cell =>
                 <BoardCell
@@ -70,21 +95,10 @@ const EditMode: React.FC = () => {
                 />
             )}
         </SudokuBoard>
+        <div className={mainPanelClasses.controls}>
+
+        </div>
     </>
 }
 
 export default EditMode
-
-export const EditModeControls: React.FC = () => {
-
-    const dispatch = useThunkDispatch()
-
-    return <>
-        <Button
-            className={mainPanelClasses.saveButton}
-            variant="contained"
-            endIcon={<SaveIcon/>}
-            onClick={() => dispatch(AppActions.quickSave())}
-        >Save</Button>
-    </>
-}

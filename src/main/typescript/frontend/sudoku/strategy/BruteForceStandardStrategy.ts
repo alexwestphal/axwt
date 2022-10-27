@@ -13,8 +13,6 @@ export class BruteForceStandardStrategy implements Strategy {
         let values = board.cells.map(cell => cell.value)
         let path = createSolvePath(config.direction, board.n)
 
-        console.log("Values: ", values)
-
         const checkCell = (x: number, y: number, guess: number): boolean => {
 
             // Check if row already contains value
@@ -40,7 +38,7 @@ export class BruteForceStandardStrategy implements Strategy {
         }
         const checkCellLog = (x: number, y: number, guess: number): boolean => {
             let result = checkCell(x, y, guess)
-            console.debug(`checkCell(${x}, ${y}, ${guess}: ${result})`)
+            //console.debug(`checkCell(${x}, ${y}, ${guess}: ${result})`)
             return result
         }
 

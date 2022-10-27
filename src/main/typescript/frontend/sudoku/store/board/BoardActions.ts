@@ -1,7 +1,7 @@
 
 import {Action, createAction} from '@axwt/core'
 
-import {BoardSize, BoardType} from '../../data'
+import {AppMode, BoardSize, BoardType} from '../../data'
 
 export namespace BoardActions {
 
@@ -11,7 +11,9 @@ export namespace BoardActions {
 
     export type SetCellValue = Action<'su/board/setCellValue', number, { x: number, y: number }>
 
-    export type Any = ClearCellValue | NewBoard | SetCellValue
+    export type SetMode = Action<'su/board/setMode', AppMode>
+
+    export type Any = ClearCellValue | NewBoard | SetCellValue | SetMode
 
 
     export const clearCellValue = (x: number, y: number): ClearCellValue =>
@@ -22,4 +24,7 @@ export namespace BoardActions {
 
     export const setCellValue = (x: number, y: number, value: number): SetCellValue =>
         createAction('su/board/setCellValue', value, { x, y })
+
+    export const setMode = (mode: AppMode): SetMode =>
+        createAction('su/board/setMode', mode)
 }

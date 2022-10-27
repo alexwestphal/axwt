@@ -13,6 +13,12 @@ import {PlayState} from './PlayState'
 
 export const PlayReducer: Reducer<PlayState> = produce((draft: Draft<PlayState>, action: SU.AnyAction) => {
     switch(action.type) {
+        case 'su/board/setMode': {
+            if(action.payload != 'Play') {
+                return PlayState.Default
+            }
+            break
+        }
         case 'su/play/applyNext': {
             let board = castImmutable(draft.current)
 

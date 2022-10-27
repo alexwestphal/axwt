@@ -3,7 +3,7 @@ import {combineReducers} from 'redux'
 
 import {Core, DisplayActions} from '@axwt/core'
 
-import {AppActions, AppReducer, AppState} from './app'
+import {AppActions} from './app'
 import {BoardActions, BoardReducer, BoardState} from './board'
 import {PlayActions, PlayReducer, PlayState} from './play'
 import {SolveActions, SolveReducer, SolveState} from './solve'
@@ -19,7 +19,6 @@ export type ThunkAction<R = void> = Core.ThunkAction<R, RootState, ExtraArgs, An
 export type ThunkDispatch = Core.ThunkDispatch<RootState, ExtraArgs, AnyAction>
 
 export interface State {
-    app: AppState
     board: BoardState
     solve: SolveState
     play: PlayState
@@ -27,7 +26,6 @@ export interface State {
 
 export namespace State {
     export const Default: State = {
-        app: AppState.Default,
         board: BoardState.Default,
         solve: SolveState.Default,
         play: PlayState.Default,
@@ -36,7 +34,6 @@ export namespace State {
 export type RootState = Core.State & { su: State }
 
 export const Reducer = combineReducers<State>({
-    app: AppReducer,
     board: BoardReducer,
     solve: SolveReducer,
     play: PlayReducer,

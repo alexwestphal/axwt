@@ -5,7 +5,7 @@ import {ControlBar, ResizeablePanelLayout, StandardMenuActions} from '@axwt/core
 
 import * as Core from '@axwt/core/store'
 
-import {FSWorkspaceId, selectAppMode, selectPlayAssistant, useThunkDispatch, useTypedSelector} from '../store'
+import {FSWorkspaceId, selectBoardMode, selectPlayAssistant, useThunkDispatch, useTypedSelector} from '../store'
 
 import AssistantPanel from './AssistantPanel'
 import FilesPanel from './FilesPanel'
@@ -14,9 +14,8 @@ import SolvePanel from './SolvePanel'
 
 export const SudokuApp: React.FC = () => {
 
-    const appMode = useTypedSelector(selectAppMode)
+    const boardMode = useTypedSelector(selectBoardMode)
     const workspace = useTypedSelector(state => Core.selectFSWorkspace(state, FSWorkspaceId))
-    const assistant = useTypedSelector(selectPlayAssistant)
 
     const dispatch = useThunkDispatch()
 
@@ -57,27 +56,35 @@ export const SudokuApp: React.FC = () => {
             onMenuAction={handleMenuAction}
         />
         <ResizeablePanelLayout
-            leftSide={ workspace.status != 'Closed' && {
+            leftSide={{
                 panels: [
-                    { Component: FilesPanel, label: "Files" },
+                    {
+                        Component: FilesPanel,
+                        label: "Files",
+                        available: workspace.status != 'Closed',
+                        autoOpen: true,
+                    },
                 ]
 
             }}
             main={{
                 Component: MainPanel
             }}
-            rightSide={
-                appMode == 'Solve' && {
-                    panels: [
-                        { Component: SolvePanel, label: 'Solve' }
-                    ]
-                } ||
-                appMode == 'Play' && assistant == 'On'&& {
-                    panels: [
-                        { Component: AssistantPanel, label: 'Assistant' }
-                    ]
-                }
-            }
+            rightSide={{
+                panels: [
+                    {
+                        Component: AssistantPanel,
+                        label: 'Assistant',
+                        available: boardMode == 'Play',
+                    },
+                    {
+                        Component: SolvePanel,
+                        label: 'Solve',
+                        available: boardMode == 'Solve',
+                        autoOpen: true
+                    }
+                ]
+            }}
         />
     </>
 }

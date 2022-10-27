@@ -1,26 +1,26 @@
 
 import * as React from 'react'
 
-import {Box, MenuItem, TextField} from '@mui/material'
+import {Box} from '@mui/material'
 
 import {PanelSizingProps} from '@axwt/core'
 import {createClasses} from '@axwt/util'
 
-import {AppMode} from '../data'
-import {AppActions, selectAppMode, useThunkDispatch, useTypedSelector} from '../store'
+import {selectBoardMode, useTypedSelector} from '../store'
 
-import EditMode, {EditModeControls} from './EditMode'
-import PlayMode, {PlayModeControls} from './PlayMode'
+import BoardTitleBar from './BoardTitleBar'
+import EditMode from './EditMode'
+import PlayMode from './PlayMode'
 import {sudokuBoardClasses} from './SudokuBoard'
 import SolveMode from './SolveMode'
 
 
-export const mainPanelClasses = createClasses("MainPanel", ["container", "controls", "display", "appModeSelect", "saveButton", "controlsSpacer"])
+
+export const mainPanelClasses = createClasses("MainPanel", ["container", "controls", "display", "controlsSpacer"])
 
 export const MainPanel: React.FC<PanelSizingProps> = (props) => {
 
-    const appMode = useTypedSelector(selectAppMode)
-    const dispatch = useThunkDispatch()
+    const boardMode = useTypedSelector(selectBoardMode)
 
     const size = Math.min(props.width, props.height - 80) * 0.75
 
@@ -36,23 +36,19 @@ export const MainPanel: React.FC<PanelSizingProps> = (props) => {
             [`& .${classes.container}`]: {
                 flex: '1 0 0',
                 width: size,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
             },
             [`& .${classes.controls}`]: {
                 display: 'flex',
-                marginTop: 2,
-                marginBottom: 1,
-                //paddingX: 1,
+                height: '40px',
+                marginY: 1
             },
             [`& .${classes.controlsSpacer}`]: {
                 flex: '1 0 0'
             },
-            [`& .${classes.appModeSelect}`]: {
-                width: '8em',
-                marginRight: 2
-            },
-            [`& .${classes.saveButton}`]: {
-                marginLeft: 2,
-            },
+
 
             [`& .${sudokuBoardClasses.root}`]: {
                 width: size,
@@ -60,27 +56,11 @@ export const MainPanel: React.FC<PanelSizingProps> = (props) => {
             },
         }}
     >
+        <BoardTitleBar/>
         <div className={classes.container}>
-            <div className={classes.controls}>
-                <TextField
-                    className={classes.appModeSelect}
-                    label="Mode"
-                    size="small"
-                    select
-                    value={appMode}
-                    onChange={(ev) => dispatch(AppActions.setMode(ev.target.value as AppMode))}
-                >
-                    <MenuItem value="Define">Define</MenuItem>
-                    <MenuItem value="Play">Play</MenuItem>
-                    <MenuItem value="Solve">Solve</MenuItem>
-                </TextField>
-                <div className={classes.controlsSpacer}></div>
-                { appMode == 'Define' && <EditModeControls/> }
-                { appMode == 'Play' && <PlayModeControls/>}
-            </div>
-            { appMode == 'Define' && <EditMode/>}
-            { appMode == 'Play' && <PlayMode/>}
-            { appMode == 'Solve' && <SolveMode/>}
+            { boardMode == 'Define' && <EditMode/>}
+            { boardMode == 'Play' && <PlayMode/>}
+            { boardMode == 'Solve' && <SolveMode/>}
         </div>
     </Box>
 }

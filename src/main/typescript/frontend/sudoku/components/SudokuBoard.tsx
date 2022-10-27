@@ -100,6 +100,9 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({children, n, onClick, o
                 [`& .${classes.cellValue_guess}`]: {
                     fill: orange[500],
                 },
+                [`& .${classes.cellValue_guess}`]: {
+                    fill: orange[500],
+                },
                 [`& .${classes.cellValue_known}`]: {
 
                 },
@@ -209,7 +212,7 @@ export const BoardCell: React.FC<BoardCellProps> = ({n, x, y, value, valueType, 
                 [classes.cellValue_known]: valueType == 'Known',
                 [classes.cellValue_guess]: valueType == 'Guess',
                 [classes.cellValue_user]: valueType == 'User',
-                [classes.cellValue_conflict]: valueType == 'Known-Conflict' || valueType == 'User-Conflict',
+                [classes.cellValue_conflict]: valueType == 'Guess-Conflict' || valueType == 'Known-Conflict' || valueType == 'User-Conflict',
             })} fontSize={w*.75}
             x={(x+.5)*w} y={(y+.5)*w}
         >{value}</text>}

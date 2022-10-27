@@ -1,7 +1,7 @@
 
 import * as React from 'react'
 
-import {Box, Button, ButtonGroup, IconButton, Tooltip} from '@mui/material'
+import {Box, Button, ButtonGroup, Divider, IconButton, ToggleButton, ToggleButtonGroup, Tooltip} from '@mui/material'
 import {lightBlue, grey} from '@mui/material/colors'
 
 import AutoFixNormalIcon from '@mui/icons-material/AutoFixNormal'
@@ -26,10 +26,11 @@ import {
 
 
 import SudokuBoard, {BoardCell, BoardCellProps, SudokuBoardProps} from './SudokuBoard'
+import {mainPanelClasses} from '@axwt/sudoku/components/MainPanel'
 
 
 
-const playModeClasses = createClasses('PlayMode', ['overlay'])
+const playModeClasses = createClasses('PlayMode', ['overlay', 'overlayContainer'])
 
 const PlayMode: React.FC = () => {
 
@@ -86,79 +87,88 @@ const PlayMode: React.FC = () => {
     }
 
     const classes = playModeClasses
-    return <Box className={classes.root} sx={{
-        position: 'relative',
+    return <Box
+        className={classes.root}
+        sx={{
 
-        [`& .${classes.overlay}`]: {
-            position: 'absolute',
-            top: 0, left: 0,
-            width: '100%', height: '100%',
-            backgroundColor: "rgba(250, 250, 250, .8)",
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-        },
-    }}>
-        { playState.gameStage == 'Init' && <>
-            <SudokuBoard n={board.n}>
-                {board.cells.map(cell =>
-                    <BoardCell
-                        key={`cell=${cell.x}-${cell.y}`}
-                        n={board.n} x={cell.x} y={cell.y}
-                        value={cell.value}
-                        highlight="none"
-                    />
-                )}
-            </SudokuBoard>
-            <div className={classes.overlay}>
-                <Button
-                    variant="contained"
-                    onClick={() => dispatch(PlayActions.startGame())}
-                >Start Game</Button>
-            </div>
-        </> }
-        { playState.gameStage == 'Play' && <>
-            <SudokuBoard n={board.n} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown} houseHighlight={playState.searchResult?.targetHouse}>
-                {board.cells.map(cell => {
+            [`& .${classes.overlayContainer}`]: {
+                position: 'relative',
+            },
+            [`& .${classes.overlay}`]: {
+                position: 'absolute',
+                top: 0, left: 0,
+                width: '100%', height: '100%',
+                backgroundColor: "rgba(250, 250, 250, .8)",
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+            },
+        }}
+    >
+        <PlayModeControls/>
+        <div className={classes.overlayContainer}>
+            { playState.gameStage == 'Init' && <>
+                <SudokuBoard n={board.n}>
+                    {board.cells.map(cell =>
+                        <BoardCell
+                            key={`cell=${cell.x}-${cell.y}`}
+                            n={board.n} x={cell.x} y={cell.y}
+                            value={cell.value}
+                            highlight="none"
+                        />
+                    )}
+                </SudokuBoard>
+                <div className={classes.overlay}>
+                    <Button
+                        variant="contained"
+                        onClick={() => dispatch(PlayActions.startGame())}
+                    >Start Game</Button>
+                </div>
+            </> }
+            { playState.gameStage == 'Play' && <>
+                <SudokuBoard n={board.n} onClick={handleClick} onBlur={handeBlur} onKeyDown={handleKeyDown} houseHighlight={playState.searchResult?.targetHouse}>
+                    {board.cells.map(cell => {
 
-                    let highlightedCandidates = playState.searchResult?.candidateHighlights.find(c => c.x == cell.x && c.y == cell.y)?.candidates
-                    let clearedCandidates = playState.searchResult?.candidateClearances.find(c => c.x == cell.x && c.y == cell.y)?.toClear
+                        let highlightedCandidates = playState.searchResult?.candidateHighlights.find(c => c.x == cell.x && c.y == cell.y)?.candidates
+                        let clearedCandidates = playState.searchResult?.candidateClearances.find(c => c.x == cell.x && c.y == cell.y)?.toClear
 
-                    let highlight: BoardCellProps['highlight'] = 'none'
-                    if(activeCellCoord != null) {
-                        let activeCell = board.getCell(activeCellCoord.x, activeCellCoord.y)
-                        if(playState.highlight == 'On') {
-                            if(board.isSameCell(cell, activeCellCoord)) highlight = 'active'
-                            else if(
-                                board.isSameColumn(cell, activeCell) ||
-                                board.isSameRow(cell, activeCell) ||
-                                board.isSameBlock(cell, activeCell)
-                            ) highlight = 'indicate'
-                            else if(cell.value > 0 && cell.value == activeCell.value)
-                                highlight = 'match'
-                        } else {
-                            if(board.isSameCell(cell, activeCellCoord)) highlight = 'active'
+                        let highlight: BoardCellProps['highlight'] = 'none'
+                        if(activeCellCoord != null) {
+                            let activeCell = board.getCell(activeCellCoord.x, activeCellCoord.y)
+                            if(playState.highlight == 'On') {
+                                if(board.isSameCell(cell, activeCellCoord)) highlight = 'active'
+                                else if(
+                                    board.isSameColumn(cell, activeCell) ||
+                                    board.isSameRow(cell, activeCell) ||
+                                    board.isSameBlock(cell, activeCell)
+                                ) highlight = 'indicate'
+                                else if(cell.value > 0 && cell.value == activeCell.value)
+                                    highlight = 'match'
+                            } else {
+                                if(board.isSameCell(cell, activeCellCoord)) highlight = 'active'
+                            }
                         }
-                    }
 
-                    return <BoardCell
-                        key={`cell=${cell.x}-${cell.y}`}
-                        n={board.n} x={cell.x} y={cell.y}
-                        value={cell.value}
-                        valueType={cell.valueType}
-                        highlight={highlight}
-                        candidates={cell.candidates}
-                        highlightedCandidates={highlightedCandidates}
-                        clearedCandidates={clearedCandidates}
-                    />
-                })}
-            </SudokuBoard>
-            {playState.searchResult != null && <Box textAlign="center">Found: {playState.searchResult.key}</Box>}
-        </>}
-        { playState.gameStage == 'Done' && <>
-
-        </>}
+                        return <BoardCell
+                            key={`cell=${cell.x}-${cell.y}`}
+                            n={board.n} x={cell.x} y={cell.y}
+                            value={cell.value}
+                            valueType={cell.valueType}
+                            highlight={highlight}
+                            candidates={cell.candidates}
+                            highlightedCandidates={highlightedCandidates}
+                            clearedCandidates={clearedCandidates}
+                        />
+                    })}
+                </SudokuBoard>
+            </>}
+        </div>
+        <div className={mainPanelClasses.controls}>
+            <div className={mainPanelClasses.controlsSpacer}></div>
+            {playState.searchResult != null && <div>Found: {playState.searchResult.key}</div>}
+            <div className={mainPanelClasses.controlsSpacer}></div>
+        </div>
     </Box>
 
 }
@@ -166,50 +176,65 @@ const PlayMode: React.FC = () => {
 export default PlayMode
 
 
-export const PlayModeControls: React.FC = () => {
+const PlayModeControls: React.FC = () => {
 
-    const playState = useTypedSelector(selectPlayState)
-    const dispatch = useThunkDispatch()
+    let playState = useTypedSelector(selectPlayState)
+    let dispatch = useThunkDispatch()
 
+    let disabled = playState.gameStage != 'Play'
     let candidateMode = playState.entryMode == 'Candidate'
 
-    return playState.gameStage == 'Play' && <>
-        <ButtonGroup sx={{ marginRight: 4 }}>
-            <IconButton>
-                <UndoIcon/>
-            </IconButton>
-            <IconButton>
-                <RedoIcon/>
-            </IconButton>
-        </ButtonGroup>
-
-        <ButtonGroup>
-            <Tooltip title="Toggle Candidates Mode">
-                <IconButton
-                    onClick={() => dispatch(PlayActions.setEntryMode(candidateMode ? 'Normal' : 'Candidate'))}
-                    sx={{ color: candidateMode ? lightBlue[500] : 'default' }}
-                >
-                    {candidateMode ? <EditIcon/> : <EditOffIcon/>}
+    return <div className={mainPanelClasses.controls}>
+        {playState.gameStage == 'Play' && <>
+            <div className={mainPanelClasses.controlsSpacer}></div>
+            <ToggleButtonGroup
+                sx={theme => ({
+                    '& .MuiToggleButtonGroup-grouped': {
+                        margin: theme.spacing(0.5),
+                        border: 0,
+                        '&.Mui-disabled': {
+                            border: 0,
+                        },
+                        '&:not(:first-of-type)': {
+                            borderRadius: theme.shape.borderRadius,
+                        },
+                        '&:first-of-type': {
+                            borderRadius: theme.shape.borderRadius,
+                        },
+                    },
+                })}
+            >
+                <Tooltip title="Toggle Candidates Mode">
+                    <ToggleButton
+                        value="Candidate"
+                        selected={!disabled && candidateMode}
+                        onClick={() => dispatch(PlayActions.setEntryMode(candidateMode ? 'Normal' : 'Candidate'))}
+                    >
+                        <EditIcon/>
+                    </ToggleButton>
+                </Tooltip>
+                <Tooltip title="Toggle Highlight">
+                    <ToggleButton
+                        value="Highlight"
+                        selected={!disabled && playState.highlight == 'On'}
+                        onClick={() => dispatch(PlayActions.toggleHighlight())}
+                    >
+                        <FlashlightOnIcon/>
+                    </ToggleButton>
+                </Tooltip>
+            </ToggleButtonGroup>
+            <Divider orientation="vertical" flexItem sx={{ mx: 1 }}/>
+            <Tooltip title="Undo">
+                <IconButton disabled={disabled}>
+                    <UndoIcon/>
                 </IconButton>
             </Tooltip>
-            <Tooltip title="Toggle Highlight">
-                <IconButton
-                    onClick={() => dispatch(PlayActions.toggleHighlight())}
-                    sx={{ color: playState.highlight == 'On' ? lightBlue[500] : 'default' }}
-                >
-                    {playState.highlight == 'On' ? <FlashlightOnIcon/> : <FlashlightOffIcon/>}
+            <Tooltip title="Redo">
+                <IconButton disabled={disabled}>
+                    <RedoIcon/>
                 </IconButton>
             </Tooltip>
-            <Tooltip title="Toggle Assistant">
-                <IconButton
-                    onClick={() => dispatch(PlayActions.toggleAssistant())}
-                    sx={{ color: playState.assistant == 'On' ? lightBlue[500] : 'default' }}
-                >
-                    {playState.assistant == 'On' ? <AutoFixNormalIcon/> : <AutoFixOffIcon/>}
-                </IconButton>
-            </Tooltip>
-        </ButtonGroup>
+        </>}
 
-
-    </>
+    </div>
 }

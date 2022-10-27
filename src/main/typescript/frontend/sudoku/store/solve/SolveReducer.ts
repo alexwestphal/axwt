@@ -8,7 +8,7 @@ import {SolveState} from './SolveState'
 
 export const SolveReducer: Reducer<SolveState> = produce((draft: Draft<SolveState>, action: SU.AnyAction) => {
     switch(action.type) {
-        case 'su/app/setMode':
+        case 'su/board/setMode':
             if(action.payload != 'Solve') {
                 clearResult(draft)
             }

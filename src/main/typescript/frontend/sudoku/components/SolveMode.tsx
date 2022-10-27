@@ -8,6 +8,7 @@ import {useInterval} from '@axwt/util'
 import {Sudoku} from '../data'
 import {selectEditBoard, selectSolveResult, selectSolveState, useTypedSelector} from '../store'
 
+import {mainPanelClasses} from './MainPanel'
 import SudokuBoard, {BoardCell} from './SudokuBoard'
 
 
@@ -32,7 +33,7 @@ const SolveMode: React.FC = () => {
                             setCurrentBoard(currentBoard.setCellValueGuess(step.x, step.y, step.value, false))
                             break
                         case 'Guess':
-                            setCurrentBoard(currentBoard.setCellValueGuess(step.x, step.y, step.value, false))
+                            setCurrentBoard(currentBoard.setCellValueGuess(step.x, step.y, step.value, true))
                             break
                         case 'Correct':
                             break
@@ -59,6 +60,7 @@ const SolveMode: React.FC = () => {
     const displayedBoard = solveState.playback == 'Show' ? result.solution : currentBoard
 
     return <>
+        <div className={mainPanelClasses.controls}></div>
         <SudokuBoard n={displayedBoard.n}>
             {displayedBoard.cells.map(cell => {
                 return <BoardCell
@@ -70,7 +72,11 @@ const SolveMode: React.FC = () => {
                 />
             })}
         </SudokuBoard>
-        {stepIndex > 1 && <Box textAlign="center">Step {stepIndex+1} of {result.stepCount}</Box>}
+        <div className={mainPanelClasses.controls}>
+            <div className={mainPanelClasses.controlsSpacer}></div>
+            {stepIndex > 0 && <div>Step {stepIndex} of {result.stepCount}</div>}
+            <div className={mainPanelClasses.controlsSpacer}></div>
+        </div>
     </>
 }
 

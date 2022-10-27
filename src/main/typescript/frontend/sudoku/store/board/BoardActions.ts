@@ -5,6 +5,9 @@ import {AppMode, BoardSize, BoardType} from '../../data'
 
 export namespace BoardActions {
 
+    export type ChangeRedo = Action<'su/board/redoChange'>
+    export type ChangeUndo = Action<'su/board/undoChange'>
+
     export type ClearCellValue = Action<'su/board/clearCellValue', null, { x: number, y: number }>
 
     export type NewBoard = Action<'su/board/newBoard', null, { boardType: BoardType, boardSize: BoardSize}>
@@ -13,8 +16,11 @@ export namespace BoardActions {
 
     export type SetMode = Action<'su/board/setMode', AppMode>
 
-    export type Any = ClearCellValue | NewBoard | SetCellValue | SetMode
+    export type Any = ChangeRedo | ChangeUndo | ClearCellValue | NewBoard | SetCellValue | SetMode
 
+
+    export const changeRedo = (): ChangeRedo => createAction('su/board/redoChange')
+    export const changeUndo = (): ChangeUndo => createAction('su/board/undoChange')
 
     export const clearCellValue = (x: number, y: number): ClearCellValue =>
         createAction('su/board/clearCellValue', null, { x, y })

@@ -9,7 +9,7 @@ import {createClasses} from '@axwt/util'
 import {selectBoardMode, useTypedSelector} from '../store'
 
 import BoardTitleBar from './BoardTitleBar'
-import EditMode from './EditMode'
+import DefineMode from './DefineMode'
 import PlayMode from './PlayMode'
 import {sudokuBoardClasses} from './SudokuBoard'
 import SolveMode from './SolveMode'
@@ -58,7 +58,7 @@ export const MainPanel: React.FC<PanelSizingProps> = (props) => {
     >
         <BoardTitleBar/>
         <div className={classes.container}>
-            { boardMode == 'Define' && <EditMode/>}
+            { boardMode == 'Define' && <DefineMode/>}
             { boardMode == 'Play' && <PlayMode/>}
             { boardMode == 'Solve' && <SolveMode/>}
         </div>

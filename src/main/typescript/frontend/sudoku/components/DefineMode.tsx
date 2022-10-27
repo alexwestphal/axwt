@@ -7,16 +7,17 @@ import RedoIcon from '@mui/icons-material/Redo'
 import SaveIcon from '@mui/icons-material/Save'
 
 import {Sudoku} from '../data'
-import {BoardActions, selectEditBoard, useThunkDispatch, useTypedSelector} from '../store'
+import {BoardActions, selectBoardHistoryCanMove, selectEditBoard, useThunkDispatch, useTypedSelector} from '../store'
 
 import SudokuBoard, {BoardCell, SudokuBoardProps} from './SudokuBoard'
 
 
 import {mainPanelClasses} from './MainPanel'
 
-const EditMode: React.FC = () => {
+const DefineMode: React.FC = () => {
 
     const board = useTypedSelector(selectEditBoard)
+    const canMove = useTypedSelector(selectBoardHistoryCanMove)
 
     const dispatch = useThunkDispatch()
 
@@ -59,6 +60,9 @@ const EditMode: React.FC = () => {
         }
     }
 
+    const handleUndo = () => dispatch(BoardActions.changeUndo())
+    const handleRedo = () => dispatch(BoardActions.changeRedo())
+
     return <>
         <div className={mainPanelClasses.controls}>
             <div className={mainPanelClasses.controlsSpacer}></div>
@@ -72,14 +76,20 @@ const EditMode: React.FC = () => {
             <Divider orientation="vertical" flexItem sx={{ mx: 1 }}/>
             <Tooltip title="Undo">
                 <span>
-                    <IconButton disabled>
+                    <IconButton
+                        disabled={!canMove.backward}
+                        onClick={handleUndo}
+                    >
                     <UndoIcon/>
                 </IconButton>
                 </span>
             </Tooltip>
             <Tooltip title="Redo">
                 <span>
-                    <IconButton disabled>
+                    <IconButton
+                        disabled={!canMove.forward}
+                        onClick={handleRedo}
+                    >
                     <RedoIcon/>
                 </IconButton>
                 </span>
@@ -101,4 +111,4 @@ const EditMode: React.FC = () => {
     </>
 }
 
-export default EditMode
+export default DefineMode

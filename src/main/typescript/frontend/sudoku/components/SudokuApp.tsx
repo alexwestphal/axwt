@@ -5,7 +5,7 @@ import {ControlBar, ResizeablePanelLayout, StandardMenuActions} from '@axwt/core
 
 import * as Core from '@axwt/core/store'
 
-import {FSWorkspaceId, selectBoardMode, selectPlayAssistant, useThunkDispatch, useTypedSelector} from '../store'
+import {FSWorkspaceId, selectBoardMode, useThunkDispatch, useTypedSelector} from '../store'
 
 import AssistantPanel from './AssistantPanel'
 import FilesPanel from './FilesPanel'

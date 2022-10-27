@@ -116,7 +116,7 @@ export const SolvePanel: React.FC = () => {
             </Grid>
             <Grid item xs={6}>
                 <TextField
-                    label="Solve Direction"
+                    label="Solve Order"
                     size="small"
                     select
                     fullWidth
@@ -126,6 +126,8 @@ export const SolvePanel: React.FC = () => {
                     <MenuItem value="Forward">Forward</MenuItem>
                     <MenuItem value="Reverse">Reverse</MenuItem>
                     <MenuItem value="Spiral">Spiral</MenuItem>
+                    <MenuItem value="LeastFilledHouse">Houses (least filled first)</MenuItem>
+                    <MenuItem value="LeastCandidates">Least Candidates</MenuItem>
                 </TextField>
             </Grid>
         </Grid>

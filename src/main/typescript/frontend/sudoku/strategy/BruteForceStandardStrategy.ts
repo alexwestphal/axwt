@@ -11,7 +11,7 @@ export class BruteForceStandardStrategy implements Strategy {
 
         let known = board.cells.map(cell => cell.value > 0)
         let values = board.cells.map(cell => cell.value)
-        let path = createSolvePath(config.direction, board.n)
+        let path = createSolvePath(board, config.direction)
 
         const checkCell = (x: number, y: number, guess: number): boolean => {
 

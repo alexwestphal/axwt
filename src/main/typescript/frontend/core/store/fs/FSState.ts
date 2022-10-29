@@ -11,25 +11,25 @@ export namespace FSState {
 
     export interface Workspace {
         status: 'Closed' | 'Pending' | 'Open'
-        directoryHandleId: string
-        rootEntry: FileSystem.Directory
-        folds: { [path: string]: 'Fold' | 'Unfold' }
+        rootDirectoryId: FileSystem.DirectoryId
+        directoriesById: Record<FileSystem.DirectoryId, FileSystem.Directory>
+        folds: Record<FileSystem.DirectoryId, 'Fold' | 'Unfold'>
         overallFold: 'FoldAll' | 'Mixed' | 'UnfoldAll'
     }
     export namespace Workspace {
         export const Default: Workspace = {
             status: 'Closed',
-            directoryHandleId: null,
-            rootEntry: null,
+            rootDirectoryId: null,
+            directoriesById: {},
             folds: {},
             overallFold: 'Mixed'
         }
     }
 
-    export const createFolds = (paths: string[], defaultValue: 'Fold' | 'Unfold'): Workspace['folds'] => {
+    export const createFolds = (directoryIds: FileSystem.DirectoryId[], defaultValue: 'Fold' | 'Unfold'): Workspace['folds'] => {
         let result = {}
-        for(let path of paths) {
-            result[path] = defaultValue
+        for(let directoryId of directoryIds) {
+            result[directoryId] = defaultValue
         }
         return result
     }

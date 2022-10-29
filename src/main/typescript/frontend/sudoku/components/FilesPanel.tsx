@@ -12,7 +12,14 @@ export const FilesPanel: React.FC<PanelSizingProps> = ({collapsePanel}) => {
         panels={[
             {
                 title: "All Files", value: "all",
-                Component: () => <FSWorkspacePanel workspaceId={SU.FSWorkspaceId}/>,
+                Component: () => <FSWorkspacePanel
+                    workspaceId={SU.FSWorkspaceId}
+                    contextMenu={{
+                        newPrimary: [
+                            { label: "Sudoku Board" },
+                        ]
+                    }}
+                />,
                 Controls: () => <FSWorkspacePanelControls workspaceId={SU.FSWorkspaceId}/>
             }
         ]}

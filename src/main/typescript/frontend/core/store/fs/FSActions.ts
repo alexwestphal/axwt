@@ -12,16 +12,24 @@ export namespace FSActions {
     export type WorkspaceMeta = { workspaceId: string }
     type WorkspaceStatus = FSState.Workspace['status']
 
+    export type DeleteFile = Action<'su/fs/delete', null, WorkspaceMeta & { fileId: FileSystem.FileId }>
+
     export type FoldAll = Action<'su/fs/foldAll', null, WorkspaceMeta>
-    export type ToggleFold = Action<'su/fs/toggleFold', string, WorkspaceMeta>
+    export type ToggleFold = Action<'su/fs/toggleFold', null, WorkspaceMeta & { directoryId: FileSystem.DirectoryId }>
     export type UnfoldAll = Action<'su/fs/unfoldAll', null, WorkspaceMeta>
 
-    export type WorkspaceInit = Action<'su/fs/workspaceInit', WorkspaceStatus, WorkspaceMeta & { directoryHandleId?: UUID }>
+    export type WorkspaceInit = Action<'su/fs/workspaceInit', WorkspaceStatus, WorkspaceMeta & { rootDirectoryId?: UUID }>
     export type WorkspaceLoad = Action<'su/fs/workspaceLoad', null, WorkspaceMeta>
-    export type WorkspaceOpen = Action<'su/fs/workspaceOpen', FileSystem.Directory, WorkspaceMeta & { directoryHandleId: UUID }>
+    export type WorkspaceOpen = Action<'su/fs/workspaceOpen', Record<FileSystem.DirectoryId, FileSystem.Directory>, WorkspaceMeta & { rootDirectoryId: UUID }>
 
-    export type Any = FoldAll | ToggleFold | UnfoldAll | WorkspaceInit | WorkspaceLoad | WorkspaceOpen
+    export type Any = DeleteFile | FoldAll | ToggleFold | UnfoldAll | WorkspaceInit | WorkspaceLoad | WorkspaceOpen
 
+    export const deleteFile = (workspaceId: string, fileId: FileSystem.FileId): Core.ThunkAction =>
+        async (dispatch, getState, { handles }) => {
+            let state = getState()
+            let workspace = selectFSWorkspace(state, workspaceId)
+            let dirHandle = handles[workspace.rootDirectoryId] as FileSystemDirectoryHandle
+        }
 
     export const foldAll = (workspaceId: string): FoldAll => createAction('su/fs/foldAll', null, { workspaceId })
 
@@ -36,10 +44,10 @@ export namespace FSActions {
             let action: WorkspaceInit
             if(kvEntry !== undefined) {
                 let dirHandle = kvEntry.value as FileSystemDirectoryHandle
-                let directoryHandleId = UUID.create()
-                handles[directoryHandleId] = dirHandle
+                let rootDirectoryId = UUID.create()
+                handles[rootDirectoryId] = dirHandle
 
-                action = createAction('su/fs/workspaceInit', "Pending", { workspaceId, directoryHandleId })
+                action = createAction('su/fs/workspaceInit', "Pending", { workspaceId, rootDirectoryId })
             } else {
                 action = createAction('su/fs/workspaceInit', "Closed", { workspaceId })
             }
@@ -50,13 +58,17 @@ export namespace FSActions {
         async (dispatch, getState, { handles }) => {
             let workspace = selectFSWorkspace(getState(), workspaceId)
 
-            let dirHandle: FileSystemDirectoryHandle = handles[workspace.directoryHandleId]
+            let dirHandle: FileSystemDirectoryHandle = handles[workspace.rootDirectoryId]
 
             await dirHandle.requestPermission({ mode: 'readwrite' })
 
-            let fsDir = await FileSystem.buildTree(dirHandle)
+            let {directoryId, directories, directoryHandles} = await FileSystem.fromNative(dirHandle)
+            Object.assign(handles, directoryHandles)
 
-            dispatch(createAction('su/fs/workspaceOpen', fsDir, { workspaceId, directoryHandleId: workspace.directoryHandleId }))
+            // Delete the old directoryId mapping
+            delete handles[workspace.rootDirectoryId]
+
+            dispatch(createAction('su/fs/workspaceOpen', directories, { workspaceId, rootDirectoryId: directoryId }))
         }
 
     export const openWorkspace = (workspaceId: string): Core.ThunkAction =>
@@ -86,16 +98,14 @@ export namespace FSActions {
             store.put({ key: `WorkspaceDirectoryHandle-${workspaceId}`, value: dirHandle })
             await tx.done
 
-            let directoryHandleId = UUID.create()
-            handles[directoryHandleId] = dirHandle
+            let {directoryId, directories, directoryHandles} = await FileSystem.fromNative(dirHandle)
+            Object.assign(handles, directoryHandles)
 
-            let fsDir = await FileSystem.buildTree(dirHandle)
-
-            dispatch(createAction('su/fs/workspaceOpen', fsDir, { workspaceId, directoryHandleId }))
+            dispatch(createAction('su/fs/workspaceOpen', directories, { workspaceId, rootDirectoryId: directoryId }))
         }
 
-    export const toggleFold = (workspaceId: string, dirPath: string): ToggleFold =>
-        createAction('su/fs/toggleFold', dirPath, { workspaceId })
+    export const toggleFold = (workspaceId: string, directoryId: FileSystem.DirectoryId): ToggleFold =>
+        createAction('su/fs/toggleFold', null, { workspaceId, directoryId })
 
     export const unfoldAll = (workspaceId: string): UnfoldAll => createAction('su/fs/unfoldAll', null, { workspaceId })
 }

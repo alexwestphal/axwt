@@ -14,81 +14,107 @@ import {
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import ContentCutIcon from '@mui/icons-material/ContentCut'
 import ContentPasteIcon from '@mui/icons-material/ContentPaste'
+import DeleteIcon from '@mui/icons-material/Delete'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import FolderIcon from '@mui/icons-material/Folder'
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess'
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore'
 
-import {ContextMenu, FileSystem, useContextMenuHandler} from '@axwt/core'
-import * as Core from '@axwt/core/store'
-
 import {createClasses} from '@axwt/util'
 
+import {FileSystem} from '../data'
+import * as Core from '../store'
+
+import {ContextMenu, ContextMenuHandler, ContextMenuItemSpec, useContextMenuHandler} from './ContextMenu'
+
+export interface FSWorkspaceContextMenu {
+
+    newPrimary?: Omit<ContextMenuItemSpec, 'submenuItems'>[]
+    newSecondary?: Omit<ContextMenuItemSpec, 'submenuItems'>[]
+}
 
 export interface FSWorkspacePanelProps {
     workspaceId: string
+    contextMenu?: FSWorkspaceContextMenu
 }
 
 const fsWorkspacePanelClasses = createClasses("FileSystemPanel", [])
 
-export const FSWorkspacePanel: React.FC<FSWorkspacePanelProps> = ({ workspaceId }) => {
+export const FSWorkspacePanel: React.FC<FSWorkspacePanelProps> = (props) => {
 
-    const workspace = Core.useTypedSelector(state => Core.selectFSWorkspace(state, workspaceId))
+    const workspace = Core.useTypedSelector(state => Core.selectFSWorkspace(state, props.workspaceId))
     const dispatch = Core.useThunkDispatch()
 
     const [selectedPath, setSelectedPath] = React.useState<string>("/")
 
     const {contextMenuProps, handleContextMenu} = useContextMenuHandler()
 
+    const newPrimaryContextMenuItems = props.contextMenu?.newPrimary ?? []
+    const newSecondaryContextMenuItems = props.contextMenu?.newSecondary ?? []
 
     const classes = fsWorkspacePanelClasses
 
     if(workspace.status == 'Pending') {
-        return <Box display="flex" justifyContent="center" padding={2}>
-            <Button variant="contained" onClick={() => dispatch(Core.FSActions.loadWorkspace(workspaceId))}>Load Files</Button>
+        return <Box display="flex" justifyContent="center" alignItems="center" flexGrow={1} padding={2}>
+            <Button variant="contained" onClick={() => dispatch(Core.FSActions.loadWorkspace(props.workspaceId))}>Load Files</Button>
         </Box>
     } else {
         return <List
             className={classes.root}
             component="div" dense
             onContextMenu={handleContextMenu}
-            sx={{}}
+            sx={{
+                flex: '1 0 0'
+            }}
         >
             <DirectoryDisplay
-                directory={workspace.rootEntry} depth={1}
+                directoryId={workspace.rootDirectoryId}
+                directories={workspace.directoriesById}
+                depth={1}
                 folds={workspace.folds}
-                toggleFold={(path) => dispatch(Core.FSActions.toggleFold(workspaceId, path))}
-                selectedPath={selectedPath}
+                toggleFold={(directoryId) => dispatch(Core.FSActions.toggleFold(props.workspaceId, directoryId))}
+                selectedEntry={selectedPath}
                 onSelect={(path) => setSelectedPath(path)}
+                onContextMenu={handleContextMenu}
             />
             <ContextMenu {...contextMenuProps} menuItems={[
                 {
                     label: "New",
                     submenuItems: [
-                        { label: "Sudoku Board" },
-                        { label: "Directory", icon: FolderIcon },
+                        ...newPrimaryContextMenuItems,
+                        {
+                            label: "Directory",
+                            icon: FolderIcon,
+                            divider: newSecondaryContextMenuItems.length > 0
+                        },
+                        ...newSecondaryContextMenuItems
                     ],
                     divider: true
                 },
                 {
                     label: "Cut",
                     icon: ContentCutIcon,
-                    keyboardShortcut: '⌘X'
+                    keyboardShortcut: '⌘X',
+                    availableFor: ['directory', 'file'],
                 },
                 {
                     label: "Copy",
                     icon: ContentCopyIcon,
-                    keyboardShortcut: '⌘C'
+                    keyboardShortcut: '⌘C',
+                    availableFor: ['directory', 'file'],
                 },
                 {
                     label: "Paste",
                     icon: ContentPasteIcon,
                     keyboardShortcut: '⌘P',
-                    divider: true
+                    availableFor: ['directory', 'file'],
+                    divider: true,
                 },
                 {
-                    label: "Delete"
+                    label: "Delete",
+                    icon: DeleteIcon,
+                    availableFor: ['directory', 'file'],
                 }
             ]}/>
         </List>
@@ -107,41 +133,53 @@ export const FSWorkspacePanelControls: React.FC<FSWorkspacePanelProps> = ({ work
 
     return workspace.status == 'Open' && <>
         <Tooltip title="Expand All">
-            <IconButton
-                size="small"
-                disabled={workspace.overallFold == 'UnfoldAll'}
-                onClick={() => dispatch(Core.FSActions.unfoldAll(workspaceId))}
-            >
+            <span>
+                <IconButton
+                    size="small"
+                    disabled={workspace.overallFold == 'UnfoldAll'}
+                    onClick={() => dispatch(Core.FSActions.unfoldAll(workspaceId))}
+                >
                 <UnfoldMoreIcon/>
             </IconButton>
+            </span>
         </Tooltip>
         <Tooltip title="Collapse All">
-            <IconButton
-                size="small"
-                disabled={workspace.overallFold == 'FoldAll'}
-                onClick={() => dispatch(Core.FSActions.foldAll(workspaceId))}
-            >
+            <span>
+                <IconButton
+                    size="small"
+                    disabled={workspace.overallFold == 'FoldAll'}
+                    onClick={() => dispatch(Core.FSActions.foldAll(workspaceId))}
+                >
                 <UnfoldLessIcon/>
             </IconButton>
+            </span>
         </Tooltip>
     </>
 }
 
 
 export interface DirectoryDisplayProps {
-    directory: FileSystem.Directory
+    directoryId: FileSystem.DirectoryId
+    directories: FileSystem.DirectoriesById
     depth: number
-    folds: Record<string, 'Fold' | 'Unfold'>
-    toggleFold: (path: string) => void
-    selectedPath: string
-    onSelect: (path: string) => void
+    folds: Record<FileSystem.DirectoryId, 'Fold' | 'Unfold'>
+    toggleFold: (directoryId: string) => void
+    selectedEntry: FileSystem.EntryId
+    onSelect: (entryId: FileSystem.EntryId) => void
+    onContextMenu: ContextMenuHandler
 }
 
-export const DirectoryDisplay: React.FC<DirectoryDisplayProps> = ({directory, depth, folds, toggleFold, selectedPath, onSelect}) => {
+export const DirectoryDisplay: React.FC<DirectoryDisplayProps> = ({directoryId, directories, depth, folds, toggleFold, selectedEntry, onSelect, onContextMenu}) => {
+    let directory = directories[directoryId]
+    let open = folds[directoryId] == 'Unfold'
 
-    let open = folds[directory.path] == 'Unfold'
+    const handleToggleFold = () => toggleFold(directoryId)
 
-    const handleToggleFold = () => toggleFold(directory.path)
+    const handleContextMenu: ContextMenuHandler = (event, entryType, entryId) => {
+        event.stopPropagation()
+        onSelect(entryId)
+        onContextMenu(event, entryType, entryId)
+    }
 
     return <>
         <ListItem
@@ -162,8 +200,9 @@ export const DirectoryDisplay: React.FC<DirectoryDisplayProps> = ({directory, de
         >
             <ListItemButton
                 dense
-                selected={selectedPath == directory.path}
-                onClick={() => onSelect(directory.path)}
+                selected={selectedEntry == directory.directoryId}
+                onClick={() => onSelect(directory.directoryId)}
+                onContextMenu={(ev) => handleContextMenu(ev, 'directory', directory.directoryId)}
                 onDoubleClick={handleToggleFold}
                 sx={{ pl: depth*2 }}
             >
@@ -176,25 +215,29 @@ export const DirectoryDisplay: React.FC<DirectoryDisplayProps> = ({directory, de
         </ListItem>
         <Collapse in={open} timeout="auto" unmountOnExit>
             <List component="div" dense disablePadding>
-                {directory.entries.map((entry, entryIndex) =>
-                    FileSystem.isDirectory(entry)
-                        ? <DirectoryDisplay
-                            key={entryIndex}
-                            directory={entry}
-                            depth={depth+1}
-                            folds={folds}
-                            toggleFold={toggleFold}
-                            selectedPath={selectedPath}
-                            onSelect={onSelect}
-                        />
-                        : <ListItemButton
-                            key={entryIndex} dense
-                            selected={selectedPath == entry.path}
-                            onClick={() => onSelect(entry.path)}
-                            sx={{ pl: (depth+1)*2 }}
-                        >
-                            <ListItemText primary={entry.name}/>
-                        </ListItemButton>
+                {directory.subDirectoryIds.map(subDirectoryId =>
+                    <DirectoryDisplay
+                        key={subDirectoryId}
+                        directoryId={subDirectoryId}
+                        directories={directories}
+                        depth={depth+1}
+                        folds={folds}
+                        toggleFold={toggleFold}
+                        selectedEntry={selectedEntry}
+                        onSelect={onSelect}
+                        onContextMenu={onContextMenu}
+                    />
+                )}
+                {directory.files.map(file =>
+                    <ListItemButton
+                        key={file.fileId} dense
+                        selected={selectedEntry == file.fileId}
+                        onClick={() => onSelect(file.fileId)}
+                        onContextMenu={(ev) => handleContextMenu(ev, 'file', file.fileId)}
+                        sx={{ pl: (depth+1)*2 }}
+                    >
+                        <ListItemText primary={file.name}/>
+                    </ListItemButton>
                 )}
             </List>
         </Collapse>

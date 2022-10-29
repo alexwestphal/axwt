@@ -7,7 +7,14 @@ import RedoIcon from '@mui/icons-material/Redo'
 import SaveIcon from '@mui/icons-material/Save'
 
 import {Sudoku} from '../data'
-import {BoardActions, selectBoardHistoryCanMove, selectEditBoard, useThunkDispatch, useTypedSelector} from '../store'
+import {
+    AppActions,
+    BoardActions,
+    selectBoardHistoryCanMove,
+    selectEditBoard, selectSaveStatus,
+    useThunkDispatch,
+    useTypedSelector
+} from '../store'
 
 import SudokuBoard, {BoardCell, SudokuBoardProps} from './SudokuBoard'
 
@@ -18,6 +25,7 @@ const DefineMode: React.FC = () => {
 
     const board = useTypedSelector(selectEditBoard)
     const canMove = useTypedSelector(selectBoardHistoryCanMove)
+    const saveStatus = useTypedSelector(selectSaveStatus)
 
     const dispatch = useThunkDispatch()
 
@@ -60,15 +68,19 @@ const DefineMode: React.FC = () => {
         }
     }
 
-    const handleUndo = () => dispatch(BoardActions.changeUndo())
-    const handleRedo = () => dispatch(BoardActions.changeRedo())
+    const handleSave = () => dispatch(AppActions.saveBoard())
+    const handleUndo = () => dispatch(AppActions.changeUndo())
+    const handleRedo = () => dispatch(AppActions.changeRedo())
 
     return <>
         <div className={mainPanelClasses.controls}>
             <div className={mainPanelClasses.controlsSpacer}></div>
             <Tooltip title="Save Board">
                 <span>
-                    <IconButton disabled>
+                    <IconButton
+                        disabled={saveStatus == 'Saved'}
+                        onClick={handleSave}
+                    >
                         <SaveIcon/>
                     </IconButton>
                 </span>

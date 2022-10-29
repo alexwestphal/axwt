@@ -5,7 +5,7 @@ import {ControlBar, ResizeablePanelLayout, StandardMenuActions} from '@axwt/core
 
 import * as Core from '@axwt/core/store'
 
-import {FSWorkspaceId, selectBoardMode, useThunkDispatch, useTypedSelector} from '../store'
+import {AppActions, FSWorkspaceId, selectAppMode, useThunkDispatch, useTypedSelector} from '../store'
 
 import AssistantPanel from './AssistantPanel'
 import FilesPanel from './FilesPanel'
@@ -14,7 +14,7 @@ import SolvePanel from './SolvePanel'
 
 export const SudokuApp: React.FC = () => {
 
-    const boardMode = useTypedSelector(selectBoardMode)
+    const appMode = useTypedSelector(selectAppMode)
     const workspace = useTypedSelector(state => Core.selectFSWorkspace(state, FSWorkspaceId))
 
     const dispatch = useThunkDispatch()
@@ -23,6 +23,9 @@ export const SudokuApp: React.FC = () => {
         switch(actionId) {
             case 'folderOpen':
                 dispatch(Core.FSActions.openWorkspace(FSWorkspaceId))
+                break
+            case 'new':
+                dispatch(AppActions.setNewBoardDialogOpen(true))
                 break
         }
     }
@@ -75,12 +78,12 @@ export const SudokuApp: React.FC = () => {
                     {
                         Component: AssistantPanel,
                         label: 'Assistant',
-                        available: boardMode == 'Play',
+                        available: appMode == 'Play',
                     },
                     {
                         Component: SolvePanel,
                         label: 'Solve',
-                        available: boardMode == 'Solve',
+                        available: appMode == 'Solve',
                         autoOpen: true
                     }
                 ]

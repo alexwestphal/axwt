@@ -3,12 +3,12 @@ import {createSelector, Selector} from 'reselect'
 
 import {ChangeStack} from '@axwt/core'
 
-import {AppMode, Sudoku} from '../../data'
+import {Sudoku} from '../../data'
 import * as SU from '../SU'
+import {BoardState} from './BoardState'
 
-
-export const selectBoardMode: Selector<SU.RootState, AppMode> =
-    (state) => state.su.board.boardMode
+export const selectBoardState: Selector<SU.RootState, BoardState> =
+    (state) => state.su.board
 
 export const selectBoardHistoryCanMove: Selector<SU.RootState, ChangeStack.CanMove> =
     (state) => ChangeStack.canMove(state.su.board)

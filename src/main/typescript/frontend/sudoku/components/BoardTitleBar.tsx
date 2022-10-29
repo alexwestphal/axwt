@@ -1,14 +1,24 @@
 
 import * as React from 'react'
 
-import {Box, Divider, IconButton, ToggleButton, ToggleButtonGroup, Tooltip} from '@mui/material'
+import {
+    Box, Button,
+    Dialog, DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    IconButton, TextField,
+    ToggleButton,
+    ToggleButtonGroup,
+    Tooltip
+} from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import ConstructionIcon from '@mui/icons-material/Construction'
 import EditIcon from '@mui/icons-material/Edit'
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports'
 
 
-import {BoardActions, selectBoardMode, useThunkDispatch, useTypedSelector} from '../store'
+import {AppActions, BoardActions, selectAppMode, selectBoardState, useThunkDispatch, useTypedSelector} from '../store'
 import {createClasses} from '@axwt/util'
 import {AppMode} from '@axwt/sudoku/data'
 
@@ -16,10 +26,17 @@ const boardTitleBarClasses = createClasses("BoardTitleBar", ['button', 'menu', '
 
 export const BoardTitleBar: React.FC = () => {
 
-    const currentMode = useTypedSelector(selectBoardMode)
+    const boardState = useTypedSelector(selectBoardState)
+    const currentMode = useTypedSelector(selectAppMode)
     const dispatch = useThunkDispatch()
 
-    const handleChangeMode = (mode: AppMode) => () => dispatch(BoardActions.setMode(mode))
+    const [nameDialogOpen, setNameDialogOpen] = React.useState<boolean>(false)
+
+    const handleChangeMode = (mode: AppMode) => () => dispatch(AppActions.setMode(mode))
+
+    const handleClickTitle = (ev: React.MouseEvent<HTMLDivElement>) => {
+        ev.currentTarget.focus()
+    }
 
     const classes = boardTitleBarClasses
     return <Box
@@ -46,15 +63,24 @@ export const BoardTitleBar: React.FC = () => {
                 flex: '1 0 0',
             },
             [`& .${classes.title}`]: {
-
                 fontWeight: 'bold',
                 paddingX: 1,
                 marginX: 1,
                 paddingTop: .5,
+                cursor: 'pointer',
             },
         }}
     >
-        <div className={classes.title} tabIndex={0}>My Sudoku Board</div>
+        <div
+            className={classes.title}
+            tabIndex={0}
+            onClick={() => setNameDialogOpen(true)}
+        >{boardState.boardName}</div>
+        <NameDialog
+            open={nameDialogOpen}
+            onClose={() => setNameDialogOpen(false)}
+            name={boardState.boardName}
+            onChangeName={(newName) => dispatch(BoardActions.setName(newName))}/>
         <div className={classes.spacer}></div>
 
         <ToggleButtonGroup
@@ -91,7 +117,7 @@ export const BoardTitleBar: React.FC = () => {
         </ToggleButtonGroup>
         <Divider orientation="vertical" flexItem sx={{ mx: 1 }}/>
         <Tooltip title="Close Board">
-            <IconButton size="small">
+            <IconButton size="small" onClick={() => dispatch(AppActions.closeBoard())}>
                 <CloseIcon fontSize="small"/>
             </IconButton>
         </Tooltip>
@@ -99,3 +125,46 @@ export const BoardTitleBar: React.FC = () => {
 }
 
 export default BoardTitleBar
+
+
+
+export interface NameDialogProps {
+    open: boolean
+    onClose: () => void
+
+    name: string
+    onChangeName: (title: string) => void
+}
+
+
+
+export const NameDialog: React.FC<NameDialogProps> = ({open, onClose, name, onChangeName}) => {
+
+    const [newName, setNewName] = React.useState<string>(name)
+
+    const handleSave = () => {
+        onClose()
+        onChangeName(newName)
+    }
+
+    return <Dialog open={open} onClose={onClose}>
+        <DialogTitle>Set Board Name</DialogTitle>
+        <DialogContent>
+            <TextField
+                autoFocus
+                margin="dense"
+                label="Board Name"
+                fullWidth
+                variant="standard"
+                value={newName}
+                onChange={(ev) => setNewName(ev.target.value)}
+            />
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSave}>Save</Button>
+        </DialogActions>
+    </Dialog>
+}
+
+

@@ -1,25 +1,26 @@
 
+import {ChangeStack, UUID} from '@axwt/core'
 
-import {AppMode, BoardSize, BoardType, Sudoku} from '../../data'
-import {ChangeStack} from '@axwt/core/data/ChangeStack'
-import {BoardActions} from '@axwt/sudoku/store'
+import {BoardSize, BoardType, Sudoku} from '../../data'
+import {BoardActions} from './BoardActions'
+
 
 export interface BoardState extends ChangeStack<Sudoku.Board, BoardActions.Any> {
-    boardMode: AppMode
-
+    boardId: UUID
+    boardName: string
     boardType: BoardType
     boardSize: BoardSize
-
 }
 
 export namespace BoardState {
     export const Default: BoardState = {
-        boardMode: 'Define',
+        boardId: null,
+        boardName: "",
         boardType: 'Standard',
         boardSize: 3,
 
-        current: new Sudoku.Board(3),
+        current: null,
         history: [],
-        historyIndex: -1
+        historyIndex: -1,
     }
 }

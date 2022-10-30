@@ -23,7 +23,7 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore'
 
 import {createClasses} from '@axwt/util'
 
-import {FileSystem} from '../data'
+import {FileSystem, StandardShortcuts} from '../data'
 import * as Core from '../store'
 
 import {ContextMenu, ContextMenuHandler, ContextMenuItemSpec, useContextMenuHandler} from './ContextMenu'
@@ -95,19 +95,19 @@ export const FSWorkspacePanel: React.FC<FSWorkspacePanelProps> = (props) => {
                 {
                     label: "Cut",
                     icon: ContentCutIcon,
-                    keyboardShortcut: '⌘X',
+                    keyboardShortcut: StandardShortcuts.ContentCut,
                     availableFor: ['directory', 'file'],
                 },
                 {
                     label: "Copy",
                     icon: ContentCopyIcon,
-                    keyboardShortcut: '⌘C',
+                    keyboardShortcut: StandardShortcuts.ContentCopy,
                     availableFor: ['directory', 'file'],
                 },
                 {
                     label: "Paste",
                     icon: ContentPasteIcon,
-                    keyboardShortcut: '⌘P',
+                    keyboardShortcut: StandardShortcuts.ContentPaste,
                     availableFor: ['directory', 'file'],
                     divider: true,
                 },

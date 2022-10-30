@@ -1,32 +1,31 @@
-import {FileSystem} from '@axwt/core/data'
+import {FileSystem, UUID} from '../../data'
 
 export interface FSState {
-    workspaces: { [workspaceName: string]: FSState.Workspace }
+    workspacesById: Record<UUID, FSState.WorkspaceState>
 }
 
 export namespace FSState {
     export const Default: FSState = {
-        workspaces: {}
+        workspacesById: {}
     }
 
-    export interface Workspace {
+    export interface WorkspaceState extends FileSystem.Workspace {
         status: 'Closed' | 'Pending' | 'Open'
-        rootDirectoryId: FileSystem.DirectoryId
-        directoriesById: Record<FileSystem.DirectoryId, FileSystem.Directory>
         folds: Record<FileSystem.DirectoryId, 'Fold' | 'Unfold'>
         overallFold: 'FoldAll' | 'Mixed' | 'UnfoldAll'
     }
     export namespace Workspace {
-        export const Default: Workspace = {
+        export const Default: WorkspaceState = {
             status: 'Closed',
             rootDirectoryId: null,
             directoriesById: {},
+            filesById: {},
             folds: {},
             overallFold: 'Mixed'
         }
     }
 
-    export const createFolds = (directoryIds: FileSystem.DirectoryId[], defaultValue: 'Fold' | 'Unfold'): Workspace['folds'] => {
+    export const createFolds = (directoryIds: FileSystem.DirectoryId[], defaultValue: 'Fold' | 'Unfold'): WorkspaceState['folds'] => {
         let result = {}
         for(let directoryId of directoryIds) {
             result[directoryId] = defaultValue

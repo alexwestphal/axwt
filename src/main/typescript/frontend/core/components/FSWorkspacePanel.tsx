@@ -15,6 +15,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import ContentCutIcon from '@mui/icons-material/ContentCut'
 import ContentPasteIcon from '@mui/icons-material/ContentPaste'
 import DeleteIcon from '@mui/icons-material/Delete'
+import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import FolderIcon from '@mui/icons-material/Folder'
@@ -27,6 +28,7 @@ import {FileSystem, StandardShortcuts} from '../data'
 import * as Core from '../store'
 
 import {ContextMenu, ContextMenuHandler, ContextMenuItemSpec, useContextMenuHandler} from './ContextMenu'
+import {FSActions, FSState} from '../store'
 
 export interface FSWorkspaceContextMenu {
 
@@ -70,9 +72,8 @@ export const FSWorkspacePanel: React.FC<FSWorkspacePanelProps> = (props) => {
         >
             <DirectoryDisplay
                 directoryId={workspace.rootDirectoryId}
-                directories={workspace.directoriesById}
+                workspace={workspace}
                 depth={1}
-                folds={workspace.folds}
                 toggleFold={(directoryId) => dispatch(Core.FSActions.toggleFold(props.workspaceId, directoryId))}
                 selectedEntry={selectedPath}
                 onSelect={(path) => setSelectedPath(path)}
@@ -112,10 +113,29 @@ export const FSWorkspacePanel: React.FC<FSWorkspacePanelProps> = (props) => {
                     divider: true,
                 },
                 {
+                    label: "Rename",
+                    icon: DriveFileRenameOutlineIcon,
+                    availableFor: ['directory'],
+                },
+                {
+                    label: "Rename",
+                    icon: DriveFileRenameOutlineIcon,
+                    availableFor: ['file'],
+                },
+                {
                     label: "Delete",
                     icon: DeleteIcon,
-                    availableFor: ['directory', 'file'],
-                }
+                    availableFor: ['directory'],
+                    onClick: (targetType, directoryId) =>
+                        dispatch(FSActions.deleteDirectory(props.workspaceId, directoryId))
+                },
+                {
+                    label: "Delete",
+                    icon: DeleteIcon,
+                    availableFor: ['file'],
+                    onClick: (targetType, fileId) =>
+                        dispatch(FSActions.deleteFile(props.workspaceId, fileId))
+                },
             ]}/>
         </List>
     }
@@ -160,18 +180,18 @@ export const FSWorkspacePanelControls: React.FC<FSWorkspacePanelProps> = ({ work
 
 export interface DirectoryDisplayProps {
     directoryId: FileSystem.DirectoryId
-    directories: FileSystem.DirectoriesById
+    workspace: FSState.WorkspaceState
     depth: number
-    folds: Record<FileSystem.DirectoryId, 'Fold' | 'Unfold'>
     toggleFold: (directoryId: string) => void
     selectedEntry: FileSystem.EntryId
     onSelect: (entryId: FileSystem.EntryId) => void
     onContextMenu: ContextMenuHandler
+    isRootDirectory?: boolean
 }
 
-export const DirectoryDisplay: React.FC<DirectoryDisplayProps> = ({directoryId, directories, depth, folds, toggleFold, selectedEntry, onSelect, onContextMenu}) => {
-    let directory = directories[directoryId]
-    let open = folds[directoryId] == 'Unfold'
+export const DirectoryDisplay: React.FC<DirectoryDisplayProps> = ({directoryId, workspace, depth, toggleFold, selectedEntry, onSelect, onContextMenu, isRootDirectory}) => {
+    let directory = workspace.directoriesById[directoryId]
+    let unfolded = workspace.folds[directoryId] == 'Unfold'
 
     const handleToggleFold = () => toggleFold(directoryId)
 
@@ -183,7 +203,7 @@ export const DirectoryDisplay: React.FC<DirectoryDisplayProps> = ({directoryId, 
 
     return <>
         <ListItem
-            secondaryAction={open
+            secondaryAction={unfolded
                 ? <Tooltip title="Collapse Directory">
                     <IconButton edge="end" onClick={handleToggleFold}>
                         <ExpandLessIcon />
@@ -202,7 +222,7 @@ export const DirectoryDisplay: React.FC<DirectoryDisplayProps> = ({directoryId, 
                 dense
                 selected={selectedEntry == directory.directoryId}
                 onClick={() => onSelect(directory.directoryId)}
-                onContextMenu={(ev) => handleContextMenu(ev, 'directory', directory.directoryId)}
+                onContextMenu={(ev) => handleContextMenu(ev, isRootDirectory ? 'root-directory' : 'directory', directory.directoryId)}
                 onDoubleClick={handleToggleFold}
                 sx={{ pl: depth*2 }}
             >
@@ -213,32 +233,32 @@ export const DirectoryDisplay: React.FC<DirectoryDisplayProps> = ({directoryId, 
             </ListItemButton>
 
         </ListItem>
-        <Collapse in={open} timeout="auto" unmountOnExit>
+        <Collapse in={unfolded} timeout="auto" unmountOnExit>
             <List component="div" dense disablePadding>
                 {directory.subDirectoryIds.map(subDirectoryId =>
                     <DirectoryDisplay
                         key={subDirectoryId}
                         directoryId={subDirectoryId}
-                        directories={directories}
+                        workspace={workspace}
                         depth={depth+1}
-                        folds={folds}
                         toggleFold={toggleFold}
                         selectedEntry={selectedEntry}
                         onSelect={onSelect}
                         onContextMenu={onContextMenu}
                     />
                 )}
-                {directory.files.map(file =>
-                    <ListItemButton
-                        key={file.fileId} dense
-                        selected={selectedEntry == file.fileId}
-                        onClick={() => onSelect(file.fileId)}
-                        onContextMenu={(ev) => handleContextMenu(ev, 'file', file.fileId)}
-                        sx={{ pl: (depth+1)*2 }}
+                {directory.fileIds.map(fileId => {
+                    let file = workspace.filesById[fileId]
+                    return <ListItemButton
+                        key={fileId} dense
+                        selected={selectedEntry == fileId}
+                        onClick={() => onSelect(fileId)}
+                        onContextMenu={(ev) => handleContextMenu(ev, 'file', fileId)}
+                        sx={{pl: (depth + 1) * 2}}
                     >
                         <ListItemText primary={file.name}/>
                     </ListItemButton>
-                )}
+                })}
             </List>
         </Collapse>
     </>

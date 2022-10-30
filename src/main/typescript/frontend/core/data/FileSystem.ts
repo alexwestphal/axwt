@@ -22,18 +22,24 @@ export namespace FileSystem {
         readonly path: string
 
         readonly subDirectoryIds: ReadonlyArray<FileSystem.DirectoryId>
-        readonly files: ReadonlyArray<FileSystem.File>
+        readonly fileIds: ReadonlyArray<FileSystem.FileId>
+    }
+
+    export interface Workspace {
+        readonly rootDirectoryId: FileSystem.DirectoryId
+        readonly directoriesById: Record<FileSystem.DirectoryId, FileSystem.Directory>
+        readonly filesById: Record<FileSystem.FileId, FileSystem.File>
     }
 
     export type Entry = FileSystem.File | FileSystem.Directory
-
-    export type DirectoriesById = Record<DirectoryId, Directory>
 
     export const isDirectory = (entry: Entry): entry is Directory => entry.type == 'directory'
 
     export interface BuildTreeResult {
         directoryId: FileSystem.DirectoryId
-        directories: Record<FileSystem.DirectoryId, FileSystem.Directory>
+        directoriesById: Record<FileSystem.DirectoryId, FileSystem.Directory>
+        filesById: Record<FileSystem.FileId, FileSystem.File>
+
         directoryHandles: Record<FileSystem.DirectoryId, FileSystemDirectoryHandle>
     }
 
@@ -46,9 +52,11 @@ export namespace FileSystem {
         let directoryId = UUID.create()
 
         let subDirectoryIds: FileSystem.DirectoryId[] = []
-        let directories: Record<FileSystem.DirectoryId, FileSystem.Directory> = {}
+        let fileIds: FileSystem.FileId[] = []
+
+        let directoriesById: Record<FileSystem.DirectoryId, FileSystem.Directory> = {}
+        let filesById: Record<FileSystem.FileId, FileSystem.File> = {}
         let directoryHandles: Record<FileSystem.DirectoryId, FileSystemDirectoryHandle> = {}
-        let files: FileSystem.File[] = []
 
         for await(let entryHandle of dirHandle.values()) {
             if(entryHandle.kind == 'directory') {
@@ -57,34 +65,40 @@ export namespace FileSystem {
                 // Add to the list of subdirectories
                 subDirectoryIds.push(subResult.directoryId)
 
-                Object.assign(directories, subResult.directories)
-                Object.assign(directoryHandles, subResult.directoryHandles)
+                Object.assign(directoriesById, subResult.directoriesById)
+                Object.assign(filesById, subResult.filesById)
 
-                directoryHandles = { ...directoryHandles, ...subResult.directoryHandles }
+                Object.assign(directoryHandles, subResult.directoryHandles)
             } else {
+                let fileId = UUID.create()
+                fileIds.push(fileId)
+
                 let pathParts = await rootHandle.resolve(entryHandle)
-                files.push({ fileId: UUID.create(), directoryId, type: 'file', name: entryHandle.name, path: '/' + pathParts.join('/') })
+                filesById[fileId] = { fileId, directoryId, type: 'file', name: entryHandle.name, path: '/' + pathParts.join('/') }
             }
         }
 
         // Sort the directories alphabetically
         subDirectoryIds.sort((dirIdA, dirIdB) =>
-            directories[dirIdA].name.localeCompare(directories[dirIdB].name)
+            directoriesById[dirIdA].name.localeCompare(directoriesById[dirIdB].name)
         )
 
         // Sort the files alphabetically
-        files.sort((fileA, fileB) => fileA.name.localeCompare(fileB.name))
+        fileIds.sort((fileIdA, fileIdB) =>
+            filesById[fileIdA].name.localeCompare(filesById[fileIdB].name))
 
         let pathParts = await rootHandle.resolve(dirHandle)
-        directories[directoryId] = {
+        directoriesById[directoryId] = {
             directoryId,
             parentDirectoryId,
             type: 'directory',
             name: dirHandle.name,
             path: '/' + pathParts.join('/'),
-            subDirectoryIds, files,
+            subDirectoryIds, fileIds
         }
-        return {directoryId, directories, directoryHandles}
+        directoryHandles[directoryId] = dirHandle
+
+        return {directoryId, directoriesById, filesById, directoryHandles}
     }
 }
 
